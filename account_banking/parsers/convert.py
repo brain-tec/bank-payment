@@ -20,10 +20,10 @@
 ##############################################################################
 
 import unicodedata
+from datetime import datetime
+
 
 __all__ = ['str2date', 'date2str', 'date2date', 'to_swift']
-
-from datetime import datetime
 
 
 def str2date(datestr, format='%d/%m/%y'):
@@ -43,14 +43,15 @@ def date2date(datestr, fromfmt='%d/%m/%y', tofmt='%Y-%m-%d'):
     '''
     return date2str(str2date(datestr, fromfmt), tofmt)
 
-_SWIFT = ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-          "/-?:().,'+ ")
-
 
 def to_swift(astr, schemes=('utf-8', 'latin-1', 'ascii')):
     '''
     Reduce a string to SWIFT format
     '''
+    _SWIFT = (
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        "/-?:().,'+ "
+    )
     if not isinstance(astr, unicode):
         for scheme in schemes:
             try:
@@ -65,5 +66,3 @@ def to_swift(astr, schemes=('utf-8', 'latin-1', 'ascii')):
          for x in unicodedata.normalize('NFKD', astr).encode('ascii', 'ignore')
          ]
     return ''.join(s)
-
-# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

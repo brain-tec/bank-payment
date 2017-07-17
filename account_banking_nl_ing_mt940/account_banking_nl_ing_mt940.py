@@ -1,23 +1,6 @@
 # -*- coding: utf-8 -*-
-##############################################################################
-#
-#    OpenERP, Open Source Management Solution
-#    This module copyright (C) 2014 Therp BV (<http://therp.nl>).
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU Affero General Public License as
-#    published by the Free Software Foundation, either version 3 of the
-#    License, or (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU Affero General Public License for more details.
-#
-#    You should have received a copy of the GNU Affero General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-##############################################################################
+# © 2014-2017 Therp BV <http://therp.nl>
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 import re
 from openerp.tools.translate import _
 from openerp.addons.account_banking.parsers.models import (
@@ -39,8 +22,10 @@ class IngMT940Parser(MT940, parser):
     code = 'INT_MT940_STRUC'
 
     tag_61_regex = re.compile(
-        r'^(?P<date>\d{6})(?P<sign>[CD])(?P<amount>\d+,\d{2})N(?P<type>.{3})'
-        r'(?P<reference>\w{1,16})')
+        r'^(?P<date>\d{6})(?P<line_date>\d{0,4})'
+        r'(?P<sign>[CD])(?P<amount>\d+,\d{2})N(?P<type>.{3})'
+        r'(?P<reference>\w{1,50})'
+    )
 
     def create_transaction(self, cr):
         return transaction()
@@ -58,7 +43,10 @@ class IngMT940Parser(MT940, parser):
 
     def handle_tag_61(self, cr, data):
         super(IngMT940Parser, self).handle_tag_61(cr, data)
-        parsed_data = self.tag_61_regex.match(data).groupdict()
+        re_61 = self.tag_61_regex.match(data)
+        if not re_61:
+            raise ValueError("Cannot parse %s" % data)
+        parsed_data = re_61.groupdict()
         self.current_transaction.transferred_amount = \
             (-1 if parsed_data['sign'] == 'D' else 1) * str2float(
                 parsed_data['amount'])

@@ -1,4 +1,4 @@
-# -*- encoding: utf-8 -*-
+# -*- coding: utf-8 -*-
 ##############################################################################
 #
 #    Copyright (C) 2011 credativ Ltd (<http://www.credativ.co.uk>).
@@ -217,8 +217,8 @@ class NorthAmericanAccount(UKAccount):
     sortcode = property(_get_sortcode, _set_sortcode)
 
     def _set_bic(self, bic):
-        if (not edifact_isalnum_size(bic, 8)
-                and not edifact_isalnum_size(bic, 11)):
+        if (not edifact_isalnum_size(bic, 8) and
+                not edifact_isalnum_size(bic, 11)):
             raise ValueError("Account BIC/Swift code must be 8 or 11 "
                              "characters long: %s" % ustr(bic))
         self._bic = bic
@@ -267,8 +267,8 @@ class SWIFTAccount(UKAccount):
     sortcode = property(_get_sortcode, _set_sortcode)
 
     def _set_bic(self, bic):
-        if (not edifact_isalnum_size(bic, 8)
-                and not edifact_isalnum_size(bic, 11)):
+        if (not edifact_isalnum_size(bic, 8) and
+                not edifact_isalnum_size(bic, 11)):
             raise ValueError("Account BIC/Swift code must be 8 or 11 "
                              "characters long: %s" % ustr(bic))
         self._bic = bic
@@ -537,8 +537,8 @@ class Batch(LogicalSection):
                 use_index = index + 1
 
             segments += transaction.segments(use_index)
-
         return segments
+
 
 # From the spec for FCA segments:
 # 13 = All charges borne by payee (or beneficiary)

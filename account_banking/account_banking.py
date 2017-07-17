@@ -219,7 +219,6 @@ class account_banking_account_settings(orm.Model):
         'default_credit_account_id': _default_credit_account_id,
         'partner_bank_id': _default_partner_bank_id,
     }
-account_banking_account_settings()
 
 
 class account_banking_imported_file(orm.Model):
@@ -286,7 +285,6 @@ class account_banking_imported_file(orm.Model):
         'date': fields.date.context_today,
         'user_id': lambda self, cr, uid, context: uid,
     }
-account_banking_imported_file()
 
 
 class account_bank_statement(orm.Model):
@@ -446,9 +444,9 @@ class account_bank_statement(orm.Model):
                         ('account_id', '=', st_line.account_id.id)],
                     context=context)
                 account_move_line_obj.write(cr, uid, torec, {
-                    (st_line.reconcile_id.line_partial_ids
-                     and 'reconcile_partial_id'
-                     or 'reconcile_id'): st_line.reconcile_id.id
+                    (st_line.reconcile_id.line_partial_ids and
+                     'reconcile_partial_id' or
+                     'reconcile_id'): st_line.reconcile_id.id
                 }, context=context)
                 for move_line in (st_line.reconcile_id.line_id or []) + (
                         st_line.reconcile_id.line_partial_ids or []):

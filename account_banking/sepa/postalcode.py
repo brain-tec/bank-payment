@@ -1,4 +1,4 @@
-# -*- encoding: utf-8 -*-
+# coding: utf-8
 ##############################################################################
 #
 #    Copyright (C) 2009 EduSense BV (<http://www.edusense.nl>).
@@ -182,6 +182,7 @@ class PostalCode(object):
         if iso in cls._formats:
             return cls._formats[iso].get(str_)
         return ''
+
 
 get = PostalCode.get
 split = PostalCode.split

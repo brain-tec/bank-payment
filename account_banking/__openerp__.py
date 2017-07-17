@@ -23,10 +23,9 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-
 {
     'name': 'Account Banking',
-    'version': '0.5',
+    'version': '7.0.0.0.5',
     'license': 'AGPL-3',
     'author': "Banking addons community,Odoo Community Association (OCA)",
     'website': 'https://launchpad.net/banking-addons',
@@ -37,6 +36,7 @@
     'data': [
         'security/ir.model.access.csv',
         'data/account_banking_data.xml',
+        'data/iban_simple_name.xml',
         'wizard/bank_import_view.xml',
         'account_banking_view.xml',
         'wizard/banking_transaction_wizard.xml',
