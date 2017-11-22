@@ -138,6 +138,7 @@ class banking_import(orm.TransientModel):
         user_obj = self.pool.get('res.user')
         statement_obj = self.pool.get('account.bank.statement')
         statement_file_obj = self.pool.get('account.banking.imported.file')
+        statement_profile_obj = self.pool.get('account.statement.profile')
         import_transaction_obj = self.pool.get('banking.import.transaction')
         period_obj = self.pool.get('account.period')
 
@@ -309,6 +310,27 @@ class banking_import(orm.TransientModel):
                 )
                 continue
 
+            # Hack by BT-mgerecke
+            # Get the account_statement_profile as bank statement object checks this.
+            # This field was introduced by brain-tec/bank-statement-reconcile/account_statement_ext.
+            profile_ids = statement_profile_obj.search(
+                cr, uid, [
+                    ('journal_id', '=', account_info.journal_id.id),
+                    ('commission_account_id', 'in', [account_info.journal_id.default_debit_account_id.id,
+                     account_info.journal_id.default_credit_account_id.id]),
+                ])
+            if not profile_ids:
+                results.log.append(
+                    _('No account statement profile found covering journal %(journal_id)s'
+                      ' with identical commision account, statement %(id)s skipped') % {
+                        'journal_id': account_info.journal_id.id,
+                        'id': statement.id,
+                    }
+                )
+                continue
+            # If you do not have profile_ids remove, also remove "profile_id = profile_ids[0]" in statement_id below.
+            # End Hack
+
             # Create the bank statement record
             statement_id = statement_obj.create(cr, uid, dict(
                 name=statement.id,
@@ -322,6 +344,7 @@ class banking_import(orm.TransientModel):
                 banking_id=import_id,
                 company_id=company.id,
                 period_id=period_ids[0],
+		        profile_id=profile_ids[0],
             ))
             imported_statement_ids.append(statement_id)
 
