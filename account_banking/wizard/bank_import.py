@@ -312,7 +312,7 @@ class banking_import(orm.TransientModel):
 
             # Hack by BT-mgerecke
             # Get the account_statement_profile as bank statement object checks this.
-            # This field was introduced by brain-tec/bank-statement-reconcile/account_statement_ext.
+            # This field was introduced by bank-statement-reconcile/account_statement_ext.
             profile_ids = statement_profile_obj.search(
                 cr, uid, [
                     ('journal_id', '=', account_info.journal_id.id),
