@@ -327,6 +327,7 @@ class banking_import(orm.TransientModel):
                         'id': statement.id,
                     }
                 )
+                results.error_cnt += 1
                 continue
             # If you do not have profile_ids remove, also remove "profile_id = profile_ids[0]" in statement_id below.
             # End Hack
