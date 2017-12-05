@@ -284,9 +284,7 @@ class CamtParser(models.parser):
             # End Hack
             stmt_number += 1
             statement.id = str(stmt_number).zfill(4)
-            if statement.end_balance != 0.0 and statement.end_balance != end_balance:
-                raise ValueError('expected end-balance ' + statement.end_balance + ' not met, got: ' + end_balance)
-            else:
+            if statement.end_balance == 0.0:
                 statement.end_balance = end_balance
         return statement
 
