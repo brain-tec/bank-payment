@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
+"""Class to parse camt files."""
 ##############################################################################
 #
-#    Copyright (C) 2013 Therp BV (<http://therp.nl>)
-#    All Rights Reserved
+#    Copyright (C) 2013-2015 Therp BV <http://therp.nl>
+#    Copyright 2017 Open Net Sàrl
 #
 #    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU Affero General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
+#    it under the terms of the GNU Affero General Public License as published
+#    by the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
 #
 #    This program is distributed in the hope that it will be useful,
@@ -19,308 +20,318 @@
 #
 ##############################################################################
 
+import re
+from datetime import datetime
 from lxml import etree
-from openerp.osv.orm import except_orm
 from openerp.addons.account_banking.parsers import models
-from openerp.addons.account_banking.parsers.convert import str2date
+from copy import copy
 
 
 bt = models.mem_bank_transaction
 
-
-class transaction(models.mem_bank_transaction):
+class bank_transaction(models.mem_bank_transaction):
 
     def __init__(self, values, *args, **kwargs):
-        super(transaction, self).__init__(*args, **kwargs)
+        super(bank_transaction, self).__init__(*args, **kwargs)
         for attr in values:
             setattr(self, attr, values[attr])
+            if attr == 'amount' and not self.transferred_amount:
+                setattr(self, 'transferred_amount', self.amount)
+            elif attr == 'eref' and not self.reference:
+                setattr(self, 'reference', self.eref)
+
 
     def is_valid(self):
-        return not self.error_message
+        return (not self.error_message and self.execution_date and
+                self.transferred_amount and True) or False
 
 
-class parser(models.parser):
+class CamtParser(models.parser):
     code = 'CAMT'
     country_code = 'CH'
     name = 'Generic CAMT Format'
     doc = '''\
-CAMT Format parser which supports camt.053 and camt.054
-'''
+    CAMT Format parser which supports camt.053 and camt.054
+    '''
+    """Parser for camt bank statement import files."""
 
-    def tag(self, node):
-        """
-        Return the tag of a node, stripped from its namespace
-        """
-        return node.tag[len(self.ns):]
+    def parse_amount(self, ns, node):
+        """Parse element that contains Amount and CreditDebitIndicator."""
+        if node is None:
+            return 0.0
+        sign = 1
+        amount = 0.0
+        sign_node = node.xpath('ns:CdtDbtInd', namespaces={'ns': ns})
+        if sign_node and sign_node[0].text == 'DBIT':
+            sign = -1
+        amount_node = node.xpath('ns:Amt', namespaces={'ns': ns})
+        if amount_node:
+            amount = sign * float(amount_node[0].text)
+        return amount
 
-    def assert_tag(self, node, expected):
-        """
-        Get node's stripped tag and compare with expected
-        """
-        assert self.tag(node) == expected, (
-            "Expected tag '%s', got '%s' instead" %
-            (self.tag(node), expected))
+    def add_value_from_node(
+            self, ns, node, xpath_str, obj, attr_name, join_str=None):
+        """Add value to object from first or all nodes found with xpath.
 
-    def xpath(self, node, expr):
-        """
-        Wrap namespaces argument into call to Element.xpath():
+        If xpath_str is a list (or iterable), it will be seen as a series
+        of search path's in order of preference. The first item that results
+        in a found node will be used to set a value."""
+        if not isinstance(xpath_str, (list, tuple)):
+            xpath_str = [xpath_str]
+        for search_str in xpath_str:
+            found_node = node.xpath(search_str, namespaces={'ns': ns})
+            if found_node:
+                if join_str is None:
+                    attr_value = found_node[0].text
+                else:
+                    attr_value = join_str.join([x.text for x in found_node])
+                # HACK by BT-mgerecke
+                # Use setattr not on dict-objects.
+                if isinstance(obj, dict):
+                    obj[attr_name] = attr_value
+                else:
+                    setattr(obj, attr_name, attr_value)
+                # End Hack
+                break
 
-        self.xpath(node, './ns:Acct/ns:Id')
-        """
-        return node.xpath(expr, namespaces={'ns': self.ns[1:-1]})
+    def parse_transaction_details(self, ns, node, transaction):
+        """Parse TxDtls node."""
+        # message
+        self.add_value_from_node(
+            ns, node, [
+                './ns:RmtInf/ns:Ustrd',
+                './ns:AddtlTxInf',
+                './ns:AddtlNtryInf',
+            ], transaction, 'message', join_str='\n')
+        # eref
+        self.add_value_from_node(
+            ns, node, [
+                './ns:RmtInf/ns:Strd/ns:CdtrRefInf/ns:Ref',
+                './ns:Refs/ns:EndToEndId',
+            ],
+            transaction, 'eref'
+        )
+        amount = self.parse_amount(ns, node)
+        if amount != 0.0:
+            transaction['amount'] = amount
+        # remote party values
+        party_type = 'Dbtr'
+        party_type_node = node.xpath(
+            '../../ns:CdtDbtInd', namespaces={'ns': ns})
+        if party_type_node and party_type_node[0].text != 'CRDT':
+            party_type = 'Cdtr'
+        party_node = node.xpath(
+            './ns:RltdPties/ns:%s' % party_type, namespaces={'ns': ns})
+        if party_node:
+            self.add_value_from_node(
+                ns, party_node[0], './ns:Nm', transaction, 'remote_owner')
+            self.add_value_from_node(
+                ns, party_node[0], './ns:PstlAdr/ns:Ctry', transaction,
+                'remote_owner_country'
+            )
+            address_node = party_node[0].xpath(
+                './ns:PstlAdr/ns:AdrLine', namespaces={'ns': ns})
+            if address_node:
+                transaction['remote_owner_address'] = address_node
+        # Get remote_account from iban or from domestic account:
+        account_node = node.xpath(
+            './ns:RltdPties/ns:%sAcct/ns:Id' % party_type,
+            namespaces={'ns': ns}
+        )
+        if account_node:
+            iban_node = account_node[0].xpath(
+                './ns:IBAN', namespaces={'ns': ns})
+            if iban_node:
+                transaction['remote_account'] = iban_node[0].text
+                bic_node = node.xpath(
+                    './ns:RltdAgts/ns:%sAgt/ns:FinInstnId/ns:BIC' % party_type,
+                    namespaces={'ns': ns}
+                )
+                if bic_node:
+                    transaction['remote_bank_bic'] = bic_node[0].text
+            else:
+                self.add_value_from_node(
+                    ns, account_node[0], './ns:Othr/ns:Id', transaction,
+                    'remote_account'
+                )
 
-    def find(self, node, expr):
-        """
-        Like xpath(), but return first result if any or else False
+    def parse_entry(self, ns, node, local_account):
+        """Parse an Ntry node and yield transactions."""
+        transaction_base = {}
+        transaction_base['local_account'] = local_account
+        self.add_value_from_node(
+            ns, node, './ns:BkTxCd/ns:Prtry/ns:Cd', transaction_base,
+            'transfer_type'
+        )
+        #TODO by BT_mgerecke
+        self.add_value_from_node(
+            ns, node, './ns:BookgDt/ns:Dt', transaction_base, 'date')
+        self.add_value_from_node(
+            ns, node, './ns:BookgDt/ns:Dt', transaction_base, 'execution_date')
+        self.add_value_from_node(
+            ns, node, './ns:ValDt/ns:Dt', transaction_base, 'value_date')
+        amount = self.parse_amount(ns, node)
+        if amount != 0.0:
+            transaction_base['amount'] = amount
+        self.add_value_from_node(
+            ns, node, './ns:AddtlNtryInf', transaction_base, 'name')
+        self.add_value_from_node(
+            ns, node, [
+                './ns:NtryDtls/ns:RmtInf/ns:Strd/ns:CdtrRefInf/ns:Ref',
+                './ns:NtryDtls/ns:Btch/ns:PmtInfId',
+            ],
+            transaction_base, 'ref'
+        )
+        details_nodes = node.xpath(
+            './ns:NtryDtls/ns:TxDtls', namespaces={'ns': ns})
+        if len(details_nodes) == 0:
+            return self.get_real_transaction_from_data(transaction_base)
+        transactions = []
+        for i, dnode in enumerate(details_nodes):
+            transaction_data = copy(transaction_base)
+            self.parse_transaction_details(ns, dnode, transaction_data)
+            # transactions['data'] should be a synthetic xml snippet which
+            # contains only the TxDtls that's relevant.
+            data = copy(node)
+            for j, dnode in enumerate(data.xpath(
+                    './ns:NtryDtls/ns:TxDtls', namespaces={'ns': ns})):
+                if j != i:
+                    dnode.getparent().remove(dnode)
+            transaction_data['data'] = etree.tostring(data)
+            #TODO by BT_mgerecke
+            # Put all known parameter into the transaction object.
+            transactions.append(bank_transaction(transaction_data))
+        return transactions
 
-        Return None to test nodes for being truesy
-        """
-        result = node.xpath(expr, namespaces={'ns': self.ns[1:-1]})
-        if result:
-            return result[0]
-        return None
+    def get_balance_amounts(self, ns, node):
+        """Return opening and closing balance.
 
-    def get_balance_type_node(self, node, balance_type):
+        Depending on kind of balance and statement, the balance might be in a
+        different kind of node:
+        OPBD = OpeningBalance
+        PRCD = PreviousClosingBalance
+        ITBD = InterimBalance (first ITBD is start-, second is end-balance)
+        CLBD = ClosingBalance
         """
-        :param node: BkToCstmrStmt/Stmt/Bal node
-        :param balance type: one of 'OPBD', 'PRCD', 'ITBD', 'CLBD'
-        """
-        code_expr = ('./ns:Bal/ns:Tp/ns:CdOrPrtry/ns:Cd[text()="%s"]/../../..'
-                     % balance_type)
-        return self.xpath(node, code_expr)
-
-    def parse_amount(self, node):
-        """
-        Parse an element that contains both Amount and CreditDebitIndicator
-
-        :return: signed amount
-        :returntype: float
-        """
-        sign = -1 if node.find(self.ns + 'CdtDbtInd').text == 'DBIT' else 1
-        return sign * float(node.find(self.ns + 'Amt').text)
-
-    def get_start_balance(self, node):
-        """
-        Find the (only) balance node with code OpeningBalance, or
-        the only one with code 'PreviousClosingBalance'
-        or the first balance node with code InterimBalance in
-        the case of preceeding pagination.
-
-        :param node: BkToCstmrStmt/Stmt/Bal node
-        """
-        nodes = (
-            self.get_balance_type_node(node, 'OPBD') or
-            self.get_balance_type_node(node, 'PRCD') or
-            self.get_balance_type_node(node, 'ITBD'))
-        return self.parse_amount(nodes[0])
-
-    def get_end_balance(self, node):
-        """
-        Find the (only) balance node with code ClosingBalance, or
-        the second (and last) balance node with code InterimBalance in
-        the case of continued pagination.
-
-        :param node: BkToCstmrStmt/Stmt/Bal node
-        """
-        nodes = (
-            self.get_balance_type_node(node, 'CLBD') or
-            self.get_balance_type_node(node, 'ITBD'))
-        return self.parse_amount(nodes[-1])
-
-    def parse_Stmt(self, cr, node, camt_version):
-        """
-        Parse a single Stmt node.
-
-        Be sure to craft a unique, but short enough statement identifier,
-        as it is used as the basis of the generated move lines' names
-        which overflow when using the full IBAN and CAMT statement id.
-        """
-        statement = models.mem_bank_statement()
-        statement.local_account = (
-            self.xpath(node, './ns:Acct/ns:Id/ns:IBAN')[0].text
-            if self.xpath(node, './ns:Acct/ns:Id/ns:IBAN')
-            else self.xpath(node, './ns:Acct/ns:Id/ns:Othr/ns:Id')[0].text)
-
-        identifier = self.normalize_identifier(
-            statement.local_account,
-            node.find(self.ns + 'Id').text)
-        statement.id = self.get_unique_statement_id(
-            cr, "%s-%s" % (
-                self.get_unique_account_identifier(
-                    cr, statement.local_account),
-                identifier)
+        start_balance_node = None
+        end_balance_node = None
+        for node_name in ['OPBD', 'PRCD', 'CLBD', 'ITBD']:
+            code_expr = (
+                './ns:Bal/ns:Tp/ns:CdOrPrtry/ns:Cd[text()="%s"]/../../..' %
+                node_name
+            )
+            balance_node = node.xpath(code_expr, namespaces={'ns': ns})
+            if balance_node:
+                if node_name in ['OPBD', 'PRCD']:
+                    start_balance_node = balance_node[0]
+                elif node_name == 'CLBD':
+                    end_balance_node = balance_node[0]
+                else:
+                    if not start_balance_node:
+                        start_balance_node = balance_node[0]
+                    if not end_balance_node:
+                        end_balance_node = balance_node[-1]
+        return (
+            self.parse_amount(ns, start_balance_node),
+            self.parse_amount(ns, end_balance_node)
         )
 
-        # HACK by BT-mgerecke
-        # Currency is not mandatory neither for CAMT.05x
-        # If not set (statement.local_currency), bank_import.py will use company default currency.
-        if self.xpath(node, './ns:Acct/ns:Ccy'):
-            statement.local_currency = self.xpath(node, './ns:Acct/ns:Ccy')[0].text
-        if camt_version == 53:
-            statement.start_balance = self.get_start_balance(node)
-            statement.end_balance = self.get_end_balance(node)
-        else:
-            # CAMT.054 (and CAMT.052?) does not contain neither start_balance nor end_balance.
-            statement.start_balance = 0
-            statement.end_balance = 0
-        # End Hack
-        number = 0
-        for Ntry in self.xpath(node, './ns:Ntry'):
-            transaction_detail = self.parse_Ntry(Ntry)
+    def parse_statement(self, ns, node):
+        """Parse a single Stmt node."""
+        statement = models.mem_bank_statement()
+        self.add_value_from_node(
+            ns, node, [
+                './ns:Acct/ns:Id/ns:IBAN',
+                './ns:Acct/ns:Id/ns:Othr/ns:Id',
+            ], statement, 'local_account'
+        )
+        self.add_value_from_node(
+            ns, node, './ns:Id', statement, 'id')
+        # Fill statement name otherwise it will be a number.
+        self.add_value_from_node(
+            ns, node, './ns:Acct/ns:Ccy', statement, 'local_currency')
+        (statement.start_balance, statement.end_balance) = (
+            self.get_balance_amounts(ns, node))
+        entry_nodes = node.xpath('./ns:Ntry', namespaces={'ns': ns})
+        transactions = []
+        stmt_number = 0
+        for entry_node in entry_nodes:
+            # TODO
+            # Multiple Statements per File are created as transactions but not as statements.
+            statement.transactions.extend(self.parse_entry(ns, entry_node, statement.local_account))
+        if statement.transactions:
+            execution_date = statement.transactions[0].execution_date[:10]
+            # TODO by BT_mgerecke
+            # Date may also be stored without "-" in statement.id
+            statement.date = datetime.strptime(execution_date, "%Y-%m-%d")
+            # Prepend date of first transaction to improve id uniquenes
+            if execution_date not in statement.id:
+                statement.id = "%s-%s" % (
+                    execution_date, statement.id)
+
             # TODO
             # HACK by BT-mgerecke for camt.054
             # Sum-up transaction amounts for a sane end_balance.
-            if camt_version == 54 and 'transferred_amount' in transaction_detail:
-                statement.end_balance += transaction_detail['transferred_amount']
+            trns_number = 0
+            end_balance = 0
+            for trans in statement.transactions:
+                transferred_amount = trans.transferred_amount
+                #if camt_version == 54 and statement.transactions.transferred_amount:
+                if transferred_amount:
+                    end_balance += transferred_amount
+                trans.id = str(trns_number).zfill(4)
+                trns_number += 1
             # End Hack
-            if number == 0:
-                # Take the statement date from the first transaction
-                statement.date = str2date(
-                    transaction_detail['execution_date'], "%Y-%m-%d")
-            number += 1
-            transaction_detail['id'] = str(number).zfill(4)
-            statement.transactions.append(
-                transaction(transaction_detail))
+            stmt_number += 1
+            statement.id = str(stmt_number).zfill(4)
+            if statement.end_balance != 0.0 and statement.end_balance != end_balance:
+                raise ValueError('expected end-balance ' + statement.end_balance + ' not met, got: ' + end_balance)
+            else:
+                statement.end_balance = end_balance
         return statement
 
-    def get_transfer_type(self, node):
-        """
-        Map entry descriptions to transfer types. To extend with
-        proper mapping from BkTxCd/Domn/Cd/Fmly/Cd to transfer types
-        if we can get our hands on real life samples.
-
-        For now, leave as a hook for bank specific overrides to map
-        properietary codes from BkTxCd/Prtry/Cd.
-
-        :param node: Ntry node
-        """
-        return bt.ORDER
-
-    def parse_Ntry(self, node):
-        """
-        :param node: Ntry node
-        """
-        entry_details = {
-            'execution_date': self.xpath(node, './ns:BookgDt/ns:Dt')[0].text,
-            'value_date': self.xpath(node, './ns:ValDt/ns:Dt')[0].text,
-            'transfer_type': self.get_transfer_type(node),
-            'transferred_amount': self.parse_amount(node)
-        }
-        TxDtls = self.xpath(node, './ns:NtryDtls/ns:TxDtls')
-        if len(TxDtls) == 1:
-            vals = self.parse_TxDtls(TxDtls[0], entry_details)
-        else:
-            vals = entry_details
-        # TODO by BT-mgerecke
-        # NEED TO BE CHECKED!
-        # Append additional entry info, which can contain remittance
-        # information in legacy format
-        Addtl = self.find(node, './ns:AddtlNtryInf')
-        if Addtl is not None and Addtl.text:
-            if vals.get('message'):
-                vals['message'] = '%s %s' % (vals['message'], Addtl.text)
-            else:
-                vals['message'] = Addtl.text
-        # Promote the message to reference if we don't have one yet
-        if not vals.get('reference') and vals.get('message'):
-            vals['reference'] = vals['message']
-        return vals
-
-    def get_party_values(self, TxDtls):
-        """
-        Determine to get either the debtor or creditor party node
-        and extract the available data from it
-        """
-        vals = {}
-        party_type = self.find(
-            TxDtls, '../../ns:CdtDbtInd').text == 'CRDT' and 'Dbtr' or 'Cdtr'
-        party_node = self.find(TxDtls, './ns:RltdPties/ns:%s' % party_type)
-        account_node = self.find(
-            TxDtls, './ns:RltdPties/ns:%sAcct/ns:Id' % party_type)
-        bic_node = self.find(
-            TxDtls,
-            './ns:RltdAgts/ns:%sAgt/ns:FinInstnId/ns:BIC' % party_type)
-        if party_node is not None:
-            name_node = self.find(party_node, './ns:Nm')
-            vals['remote_owner'] = (
-                name_node.text if name_node is not None else False)
-            country_node = self.find(party_node, './ns:PstlAdr/ns:Ctry')
-            vals['remote_owner_country'] = (
-                country_node.text if country_node is not None else False)
-            address_node = self.find(party_node, './ns:PstlAdr/ns:AdrLine')
-            if address_node is not None:
-                vals['remote_owner_address'] = [address_node.text]
-        if account_node is not None:
-            iban_node = self.find(account_node, './ns:IBAN')
-            if iban_node is not None:
-                vals['remote_account'] = iban_node.text
-                if bic_node is not None:
-                    vals['remote_bank_bic'] = bic_node.text
-            else:
-                domestic_node = self.find(account_node, './ns:Othr/ns:Id')
-                vals['remote_account'] = (
-                    domestic_node.text if domestic_node is not None else False)
-        return vals
-
-    def parse_TxDtls(self, TxDtls, entry_values):
-        """
-        Parse a single TxDtls node
-        """
-        vals = dict(entry_values)
-        unstructured = self.xpath(TxDtls, './ns:RmtInf/ns:Ustrd')
-        if unstructured:
-            vals['message'] = ' '.join([x.text for x in unstructured])
-        structured = self.find(
-            TxDtls, './ns:RmtInf/ns:Strd/ns:CdtrRefInf/ns:Ref')
-        if structured is None or not structured.text:
-            structured = self.find(TxDtls, './ns:Refs/ns:EndToEndId')
-        if structured is not None:
-            vals['reference'] = structured.text
-        else:
-            if vals.get('message'):
-                vals['reference'] = vals['message']
-        vals.update(self.get_party_values(TxDtls))
-        return vals
-
-    def check_version(self):
-        """
-        Sanity check the document's namespace
-        """
-        if not self.ns.startswith('{urn:iso:std:iso:20022:tech:xsd:camt.') \
-                and not self.ns.startswith('{ISO:camt.'):
-            raise except_orm(
-                "Error",
-                "This does not seem to be a CAMT format bank statement.")
-
-        if self.ns.startswith('{urn:iso:std:iso:20022:tech:xsd:camt.053.') \
-                or self.ns.startswith('{ISO:camt.053'):
-            camt_version = 53
-        elif self.ns.startswith('{urn:iso:std:iso:20022:tech:xsd:camt.054.') \
-                or self.ns.startswith('{ISO:camt.054'):
-            camt_version = 54
-        else:
-            raise except_orm(
-                "Error",
-                "Only CAMT.053 and CAMT.054 are supported with this profile.")
-        return camt_version
+    def check_version(self, ns, root):
+        """Validate validity of camt file."""
+        # Check wether it is camt at all:
+        re_camt = re.compile(
+            r'(^urn:iso:std:iso:20022:tech:xsd:camt.'
+            r'|^ISO:camt.)'
+        )
+        if not re_camt.search(ns):
+            raise ValueError('no camt: ' + ns)
+        # Check wether version 052 ,053 or 054:
+        re_camt_version = re.compile(
+            r'(^urn:iso:std:iso:20022:tech:xsd:camt.054.'
+            r'|^urn:iso:std:iso:20022:tech:xsd:camt.053.'
+            r'|^urn:iso:std:iso:20022:tech:xsd:camt.052.'
+            r'|^ISO:camt.054.'
+            r'|^ISO:camt.053.'
+            r'|^ISO:camt.052.)'
+        )
+        if not re_camt_version.search(ns):
+            raise ValueError('no camt 052 or 053: ' + ns)
+        # Check GrpHdr element:
+        root_0_0 = root[0][0].tag[len(ns) + 2:]  # strip namespace
+        if root_0_0 != 'GrpHdr':
+            raise ValueError('expected GrpHdr, got: ' + root_0_0)
 
     def parse(self, cr, data):
-        """
-        Parse a CAMT.05x XML file
-        """
-        # TODO
-        # Encode need to be handled with more care!
+        """Parse a camt.052, camt.053 or camt.054 file."""
         try:
-            root = etree.fromstring(data)
+            root = etree.fromstring(
+                data, parser=etree.XMLParser(recover=True))
         except etree.XMLSyntaxError:
             # ABNAmro is known to mix up encodings
-            root = etree.fromstring(data.decode('iso-8859-15').encode('utf-8'))
-        self.ns = root.tag[:root.tag.index("}") + 1]
-        camt_version = self.check_version()
-        self.assert_tag(root[0][0], 'GrpHdr')
+            root = etree.fromstring(
+                data.decode('iso-8859-15').encode('utf-8'))
+        if root is None:
+            raise ValueError(
+                'Not a valid xml file, or not an xml file at all.')
+        ns = root.tag[1:root.tag.index("}")]
+        self.check_version(ns, root)
         statements = []
         for node in root[0][1:]:
-            statement = self.parse_Stmt(cr, node, camt_version)
+            statement = self.parse_statement(ns, node)
             if len(statement.transactions):
                 statements.append(statement)
         return statements
