@@ -110,6 +110,14 @@ class CamtParser(models.parser):
             ],
             transaction, 'eref'
         )
+        self.add_value_from_node(
+            ns, node, [
+                './ns:Refs/ns:Prtry/ns:AcctSvcrRef',
+                './ns:Refs/ns:AcctSvcrRef',
+            ],
+            transaction, 'name'
+        )
+
         amount = self.parse_amount(ns, node)
         if amount != 0.0:
             transaction['amount'] = amount
