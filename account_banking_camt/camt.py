@@ -110,12 +110,13 @@ class CamtParser(models.parser):
             ],
             transaction, 'eref'
         )
+        # Unique reference as assigned by the account servicing institution to unambiguously identify the entry
         self.add_value_from_node(
             ns, node, [
                 './ns:Refs/ns:Prtry/ns:AcctSvcrRef',
                 './ns:Refs/ns:AcctSvcrRef',
             ],
-            transaction, 'name'
+            transaction, 'id'
         )
 
         amount = self.parse_amount(ns, node)
@@ -252,9 +253,9 @@ class CamtParser(models.parser):
                 './ns:Acct/ns:Id/ns:Othr/ns:Id',
             ], statement, 'local_account'
         )
+        # Fill statement name (id) otherwise it will be a number.
         self.add_value_from_node(
             ns, node, './ns:Id', statement, 'id')
-        # Fill statement name otherwise it will be a number.
         self.add_value_from_node(
             ns, node, './ns:Acct/ns:Ccy', statement, 'local_currency')
         (statement.start_balance, statement.end_balance) = (
@@ -277,15 +278,12 @@ class CamtParser(models.parser):
             # TODO
             # HACK by BT-mgerecke for camt.054
             # Sum-up transaction amounts for a sane end_balance.
-            trns_number = 0
             end_balance = 0
             for trans in statement.transactions:
                 transferred_amount = trans.transferred_amount
                 #if camt_version == 54 and statement.transactions.transferred_amount:
                 if transferred_amount:
                     end_balance += transferred_amount
-                trans.id = str(trns_number).zfill(4)
-                trns_number += 1
             # End Hack
             if statement.end_balance == 0.0:
                 statement.end_balance = end_balance
