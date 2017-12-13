@@ -40,7 +40,6 @@ class bank_transaction(models.mem_bank_transaction):
             elif attr == 'eref' and not self.reference:
                 setattr(self, 'reference', self.eref)
 
-
     def is_valid(self):
         return (not self.error_message and self.execution_date and
                 self.transferred_amount and True) or False
@@ -253,8 +252,6 @@ class CamtParser(models.parser):
         (statement.start_balance, statement.end_balance) = (
             self.get_balance_amounts(ns, node))
         entry_nodes = node.xpath('./ns:Ntry', namespaces={'ns': ns})
-        transactions = []
-        stmt_number = 0
         for entry_node in entry_nodes:
             # TODO
             # Multiple Statements per File are created as transactions but not as statements.
@@ -282,8 +279,6 @@ class CamtParser(models.parser):
                 trans.id = str(trns_number).zfill(4)
                 trns_number += 1
             # End Hack
-            stmt_number += 1
-            statement.id = str(stmt_number).zfill(4)
             if statement.end_balance == 0.0:
                 statement.end_balance = end_balance
         return statement
@@ -297,7 +292,7 @@ class CamtParser(models.parser):
         )
         if not re_camt.search(ns):
             raise ValueError('no camt: ' + ns)
-        # Check wether version 052 ,053 or 054:
+        # Check whether version 052 ,053 or 054:
         re_camt_version = re.compile(
             r'(^urn:iso:std:iso:20022:tech:xsd:camt.054.'
             r'|^urn:iso:std:iso:20022:tech:xsd:camt.053.'
