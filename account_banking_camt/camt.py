@@ -27,12 +27,11 @@ from openerp.addons.account_banking.parsers import models
 from copy import copy
 
 
-bt = models.mem_bank_transaction
-
 class bank_transaction(models.mem_bank_transaction):
 
     def __init__(self, values, *args, **kwargs):
         super(bank_transaction, self).__init__(*args, **kwargs)
+        # Put some attributes in the right place.
         for attr in values:
             setattr(self, attr, values[attr])
             if attr == 'amount' and not self.transferred_amount:
@@ -110,7 +109,7 @@ class CamtParser(models.parser):
             ],
             transaction, 'eref'
         )
-        # Unique reference as assigned by the account servicing institution to unambiguously identify the entry
+        # Unique reference as assigned by the account servicing institution to unambiguously identify the entry.
         self.add_value_from_node(
             ns, node, [
                 './ns:Refs/ns:Prtry/ns:AcctSvcrRef',
@@ -171,7 +170,6 @@ class CamtParser(models.parser):
             ns, node, './ns:BkTxCd/ns:Prtry/ns:Cd', transaction_base,
             'transfer_type'
         )
-        #TODO by BT_mgerecke
         self.add_value_from_node(
             ns, node, './ns:BookgDt/ns:Dt', transaction_base, 'date')
         self.add_value_from_node(
@@ -206,7 +204,6 @@ class CamtParser(models.parser):
                 if j != i:
                     dnode.getparent().remove(dnode)
             transaction_data['data'] = etree.tostring(data)
-            #TODO by BT_mgerecke
             # Put all known parameter into the transaction object.
             transactions.append(bank_transaction(transaction_data))
         return transactions
@@ -267,7 +264,7 @@ class CamtParser(models.parser):
             statement.transactions.extend(self.parse_entry(ns, entry_node, statement.local_account))
         if statement.transactions:
             execution_date = statement.transactions[0].execution_date[:10]
-            # TODO by BT_mgerecke
+            # TODO
             # Date may also be stored without "-" in statement.id
             statement.date = datetime.strptime(execution_date, "%Y-%m-%d")
             # Prepend date of first transaction to improve id uniquenes
