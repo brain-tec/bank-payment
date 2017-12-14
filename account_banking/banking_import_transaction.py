@@ -215,6 +215,19 @@ class banking_import_transaction(orm.Model):
                 inum = invoice.number.upper()
                 if inum in ref or inum in msg:
                     return True
+                # HACK by BT-mgerecke
+                # Invoice name or bvr_reference is used by client.
+                if invoice.name and len(invoice.name) > 2:
+                    iname = invoice.name.upper()
+                    if iname in ref or iname in msg:
+                        return True
+                if invoice.bvr_reference and len(invoice.bvr_reference) > 2:
+                    # TODO by BT-mgerecke
+                    # Remove whitespaces from BVR reference?
+                    ibvrref = invoice.bvr_reference.upper().replace(" ", "")
+                    if ibvrref in ref or ibvrref in msg:
+                        return True
+                # End Hack
 
             return False
 
