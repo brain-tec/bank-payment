@@ -269,7 +269,7 @@ class CamtParser(models.parser):
             statement.date = datetime.strptime(execution_date, "%Y-%m-%d")
             # Prepend date of first transaction to improve id uniquenes
             if execution_date not in statement.id:
-                statement.id = "%s-%s" % (
+                statement.id = "CAMT_%s-%s" % (
                     execution_date, statement.id)
 
             # TODO
