@@ -1011,7 +1011,7 @@ class banking_import_transaction(orm.Model):
                 if transaction.statement_line_id.state == 'confirmed':
                     raise orm.except_orm(
                         _("Cannot perform match"),
-                        _("Cannot perform match on a confirmed transction"))
+                        _("Cannot perform match on a confirmed transaction"))
             else:
                 values = {
                     'name': '%s.%s' % (transaction.statement,
