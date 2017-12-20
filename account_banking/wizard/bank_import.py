@@ -365,6 +365,8 @@ class banking_import(orm.TransientModel):
                 values['bank_country_code'] = bank_country_code
                 values['local_account'] = statement.local_account
                 values['local_currency'] = statement.local_currency
+                # Force writeoff of imported transaction.
+                values['payment_option'] = 'with_writeoff'
 
                 transaction_id = import_transaction_obj.create(
                     cr, uid, values, context=context)
