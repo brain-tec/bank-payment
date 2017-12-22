@@ -217,18 +217,17 @@ class banking_import_transaction(orm.Model):
                     return True
                 # HACK by BT-mgerecke
                 # Invoice name or bvr_reference is used by client.
-                if invoice.name and len(invoice.name) > 2:
-                    iname = invoice.name.upper()
-                    if iname in ref or iname in msg:
-                        return True
                 if invoice.bvr_reference and len(invoice.bvr_reference) > 2:
                     # TODO by BT-mgerecke
                     # Remove whitespaces from BVR reference?
                     ibvrref = invoice.bvr_reference.upper().replace(" ", "")
                     if ibvrref in ref or ibvrref in msg:
                         return True
+                if invoice.name and len(invoice.name) > 2:
+                    iname = invoice.name.upper()
+                    if iname in ref or iname in msg:
+                        return True
                 # End Hack
-
             return False
 
         def _cached(move_line):
@@ -387,6 +386,10 @@ class banking_import_transaction(orm.Model):
                     # invoice_obj.write(cr, uid, [invoice.id], {
                     #     'state': 'paid'
                     #  })
+                # TODO
+                # Do writeoff if difference is very small.
+                #elif abs(expected - found) < 0.05:
+                #    trans.payment_option = 'with_writeoff'
                 elif abs(expected) > abs(found):
                     # Partial payment, reuse invoice
                     _cache(move_line, expected - found)
@@ -1166,10 +1169,20 @@ class banking_import_transaction(orm.Model):
                 # invoice, automatic invoicing on bank costs will create
                 # these, and invoice matching still has to be done.
 
+                # HACK by BT-mgerecke
+                # Make two runs. First matches only references, second goes with partner info.
                 transaction, move_info, remainder = self._match_invoice(
-                    cr, uid, transaction, move_lines, partner_ids,
+                    cr, uid, transaction, move_lines, False,
                     partner_banks, results['log'], linked_invoices,
                     context=context)
+                if not move_info:
+                    # TODO
+                    # Get also parent/child partners of partner_ids?
+                    transaction, move_info, remainder = self._match_invoice(
+                        cr, uid, transaction, move_lines, partner_ids,
+                        partner_banks, results['log'], linked_invoices,
+                        context=context)
+                # End HACK
                 if remainder:
                     injected.append(self.browse(cr, uid, remainder, context))
 
@@ -1197,6 +1210,8 @@ class banking_import_transaction(orm.Model):
             values = {'account_id': account_id}
             self_values = {}
             if move_info:
+                # Write payment_option again in case something changed.
+                self_values = {'payment_option': transaction.payment_option}
                 results['trans_matched_cnt'] += 1
                 self_values.update(
                     self.move_info2values(move_info))
