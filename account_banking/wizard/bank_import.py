@@ -365,7 +365,6 @@ class banking_import(orm.TransientModel):
                 values['bank_country_code'] = bank_country_code
                 values['local_account'] = statement.local_account
                 values['local_currency'] = statement.local_currency
-
                 transaction_id = import_transaction_obj.create(
                     cr, uid, values, context=context)
                 transaction_ids.append(transaction_id)
