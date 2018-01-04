@@ -64,7 +64,11 @@ def create_move_from_st_line(self, cr, uid, st_line_id, company_currency_id, nex
                 'move_ids': [(4, v.move_id.id, False)]
             })
 
-            return move_line_obj.write(cr, uid, [x.id for x in v.move_ids], {'statement_id': st_line.statement_id.id}, context=context)
+            # HACK by BT-mgerecke
+            # Change name of move_line to invoice name because
+            # move_line creation is hidden in workflow management.
+            return move_line_obj.write(cr, uid, [x.id for x in v.move_ids], {'statement_id': st_line.statement_id.id, 'name': st_line.invoice_id.internal_number}, context=context)
+            # End HACK
         return super(account_bank_statement, self).create_move_from_st_line(cr, uid, st_line.id, company_currency_id, next_number, context=context)
 
 

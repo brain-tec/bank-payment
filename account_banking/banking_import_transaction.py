@@ -386,10 +386,16 @@ class banking_import_transaction(orm.Model):
                     # invoice_obj.write(cr, uid, [invoice.id], {
                     #     'state': 'paid'
                     #  })
+                # HACK by BT-mgerecke
+                # TODO: Need to set the writeoff account! Otherwise error in SQL-Query!
+                # bt#398 Do writeoff if client payed too much.
+                #elif abs(expected) < abs(found):
+                #    trans.payment_option = 'with_writeoff'
                 # TODO
-                # Do writeoff if difference is very small.
+                # bt#398 Do writeoff if difference is very small.
                 #elif abs(expected - found) < 0.05:
                 #    trans.payment_option = 'with_writeoff'
+                # END HACK
                 elif abs(expected) > abs(found):
                     # Partial payment, reuse invoice
                     _cache(move_line, expected - found)
@@ -507,6 +513,11 @@ class banking_import_transaction(orm.Model):
         # Define the voucher line
         vch_line = {
             # 'voucher_id': v_id,
+            # HACK by MG
+            # bt#398 Invoice name missing in Journal Entry.
+            'name': transaction.move_line_id.name,
+            'partner_id': transaction.move_line_id.partner_id,
+            # END HACK
             'move_line_id': transaction.move_line_id.id,
             'reconcile': True,
             'amount': line_amount,
@@ -1017,7 +1028,7 @@ class banking_import_transaction(orm.Model):
                         _("Cannot perform match on a confirmed transaction"))
             else:
                 values = {
-                    'name': '%s.%s' % (transaction.statement,
+                    'name': '%s.%s' % (transaction.statement or transaction.statement_id.name,
                                        transaction.transaction),
                     'date': transaction.execution_date,
                     'amount': transaction.transferred_amount,
