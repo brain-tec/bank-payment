@@ -371,6 +371,7 @@ class banking_import(orm.TransientModel):
 
             results.stat_loaded_cnt += 1
 
+        context['bank_import'] = "quickCamtImport"
         import_transaction_obj.match(
             cr, uid, transaction_ids, results=results, context=context
         )

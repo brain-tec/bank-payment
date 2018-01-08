@@ -861,6 +861,16 @@ class banking_import_transaction(orm.Model):
         return False
 
     def match(self, cr, uid, ids, results=None, context=None):
+        # HACK by BT-mgerecke
+        # Speed-up matching for camt-import of POST.
+        quickCamtImport = False
+        if context:
+            if 'bank_import' in context:
+                if context['bank_import'] == "quickCamtImport":
+                    quickCamtImport = True
+                del context['bank_import']
+        # END HACK
+
         if not ids:
             return True
 
@@ -1135,7 +1145,9 @@ class banking_import_transaction(orm.Model):
                 )
                 if partner_banks:
                     partner_ids = [x.partner_id.id for x in partner_banks]
-                elif transaction.remote_owner:
+                # HACK by BT-mgerecke
+                # Disable search for partner if we want to be fast.
+                elif transaction.remote_owner and not quickCamtImport:
                     country_id = banktools.get_country_id(
                         self.pool, cr, uid, transaction, context=context)
                     partner_id = banktools.get_partner(
@@ -1181,19 +1193,18 @@ class banking_import_transaction(orm.Model):
                 # these, and invoice matching still has to be done.
 
                 # HACK by BT-mgerecke
-                # Make two runs. First matches only references, second goes with partner info.
-                transaction, move_info, remainder = self._match_invoice(
-                    cr, uid, transaction, move_lines, False,
-                    partner_banks, results['log'], linked_invoices,
-                    context=context)
-                # !!! Disabled because of timeouts!!!
-                #if not move_info:
-                #    # TODO
-                #    # Get also parent/child partners of partner_ids?
-                #    transaction, move_info, remainder = self._match_invoice(
-                #        cr, uid, transaction, move_lines, partner_ids,
-                #        partner_banks, results['log'], linked_invoices,
-                #        context=context)
+                # For quick comparation match only references otherwise go with partner info.
+                if quickCamtImport:
+                    transaction, move_info, remainder = self._match_invoice(
+                        cr, uid, transaction, move_lines, False, partner_banks,
+                        results['log'], linked_invoices, context=context)
+                else:
+                # TODO by BT-mgerecke
+                # Get also parent/child partners of partner_ids?
+                    transaction, move_info, remainder = self._match_invoice(
+                        cr, uid, transaction, move_lines, partner_ids,
+                        partner_banks, results['log'], linked_invoices,
+                        context=context)
                 # End HACK
                 if remainder:
                     injected.append(self.browse(cr, uid, remainder, context))
