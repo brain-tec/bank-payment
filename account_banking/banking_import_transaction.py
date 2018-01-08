@@ -219,7 +219,7 @@ class banking_import_transaction(orm.Model):
                 # Invoice name or bvr_reference is used by client.
                 if invoice.bvr_reference and len(invoice.bvr_reference) > 2:
                     # TODO by BT-mgerecke
-                    # Remove whitespaces from BVR reference?
+                    # Remove whitespaces from BVR reference
                     ibvrref = invoice.bvr_reference.upper().replace(" ", "")
                     if ibvrref in ref or ibvrref in msg:
                         return True
@@ -1186,13 +1186,14 @@ class banking_import_transaction(orm.Model):
                     cr, uid, transaction, move_lines, False,
                     partner_banks, results['log'], linked_invoices,
                     context=context)
-                if not move_info:
-                    # TODO
-                    # Get also parent/child partners of partner_ids?
-                    transaction, move_info, remainder = self._match_invoice(
-                        cr, uid, transaction, move_lines, partner_ids,
-                        partner_banks, results['log'], linked_invoices,
-                        context=context)
+                # !!! Disabled because of timeouts!!!
+                #if not move_info:
+                #    # TODO
+                #    # Get also parent/child partners of partner_ids?
+                #    transaction, move_info, remainder = self._match_invoice(
+                #        cr, uid, transaction, move_lines, partner_ids,
+                #        partner_banks, results['log'], linked_invoices,
+                #        context=context)
                 # End HACK
                 if remainder:
                     injected.append(self.browse(cr, uid, remainder, context))
