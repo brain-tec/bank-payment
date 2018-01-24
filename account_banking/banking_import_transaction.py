@@ -299,13 +299,7 @@ class banking_import_transaction(orm.Model):
             # HACK by BT-mgerecke
             # Exchange old code with quick database-queries.
             if quickCamtImport and move_lines:
-                i = 0
-                max_movel = len(move_lines)
-                move_line_ids = []
-                while i < max_movel:
-                    move_line_ids.append(move_lines[i].id)
-                    i += 1
-
+                move_line_ids = [ ml.id for ml in move_lines ]
                 # Look for the bvr_reference and dates directly in the db which is time much faster than before.
                 cr.execute("SELECT move_id "
                            "FROM account_invoice "
@@ -373,7 +367,7 @@ class banking_import_transaction(orm.Model):
             # TODO: currency coercing
             # HACK by BT-mgerecke
             # Exchange old code with quick database-queries.
-            if quickCamtImport:
+            if quickCamtImport and move_lines:
                 best = []
                 for candi in candidates:
                     cr.execute("SELECT move_id, date, credit, debit "
