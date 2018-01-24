@@ -260,6 +260,15 @@ class banking_import_transaction(orm.Model):
             return self.pool.get('res.currency').is_zero(
                 cr, uid, trans.statement_id.currency, total)
 
+        # HACK by BT-mgerecke
+        # Speed-up matching for camt-import of POST.
+        quickCamtImport = False
+        if context:
+            if 'bank_import' in context:
+                if context['bank_import'] == "quickCamtImport":
+                    quickCamtImport = True
+        # END HACK
+
         digits = dp.get_precision('Account')(cr)[1]
         partial = False
 
@@ -287,7 +296,50 @@ class banking_import_transaction(orm.Model):
             # The manual usage of the sales journal creates moves that
             # are not tied to invoices. Thanks to Stefan Rijnhart for
             # reporting this.
-            candidates = [
+            # HACK by BT-mgerecke
+            # Exchange old code with quick database-queries.
+            if quickCamtImport and move_lines:
+                i = 0
+                max_movel = len(move_lines)
+                move_line_ids = []
+                while i < max_movel:
+                    move_line_ids.append(move_lines[i].id)
+                    i += 1
+
+                # Look for the bvr_reference and dates directly in the db which is time much faster than before.
+                cr.execute("SELECT move_id "
+                           "FROM account_invoice "
+                           "WHERE REPLACE(bvr_reference,' ','') = %s "
+                           "AND state = 'open' "
+                           "AND type = 'out_invoice' "
+                           "AND date_invoice <= %s "
+                           "ORDER BY id", (ref, (convert.str2date(trans.execution_date, '%Y-%m-%d') + self.payment_window)),)
+                result_move_ids = cr.fetchone()
+                if result_move_ids:
+                    cr.execute("SELECT id "
+                               "FROM account_move_line "
+                               "WHERE id in %s "
+                               "AND move_id in %s "
+                               "ORDER BY id", (tuple(move_line_ids),result_move_ids,))
+                result_move_line_ids = cr.fetchone()
+
+                if result_move_line_ids:
+                    filtered_candidates = []
+                    for ml_id in result_move_line_ids:
+                        if ml_id in move_line_ids:
+                            index = move_line_ids.index(ml_id)
+                            filtered_candidates.append(move_lines[index])
+
+                    # Checking the prefiltered candidates. Invoice check and reference matching was already done.
+                    candidates = [
+                        x for x in filtered_candidates
+                        if ((not _cached(x) or _remaining(x)) and
+                            (not partner_ids or
+                             x.invoice.partner_id.id in partner_ids))
+                    ]
+            # End Hack
+            else:
+                candidates = [
                 x for x in candidates or move_lines
                 if (x.invoice and has_id_match(x.invoice, ref, msg) and
                     convert.str2date(x.invoice.date_invoice, '%Y-%m-%d') <=
@@ -319,7 +371,29 @@ class banking_import_transaction(orm.Model):
             # amounts expected and received.
             #
             # TODO: currency coercing
-            best = [
+            # HACK by BT-mgerecke
+            # Exchange old code with quick database-queries.
+            if quickCamtImport:
+                best = []
+                for candi in candidates:
+                    cr.execute("SELECT move_id, date, credit, debit "
+                               "FROM account_move_line "
+                               "WHERE id = %s ", (candi.id,))
+                    result_candi = cr.fetchone()
+                    if result_candi:
+                        move_id = result_candi[0]
+                        date = result_candi[1]
+                        credit = result_candi[2]
+                        debit = result_candi[3]
+                        if (is_zero(move_id, ((debit or 0.0) - (credit or 0.0)) -
+                                             trans.statement_line_id.amount) and
+                                convert.str2date(date, '%Y-%m-%d') <=
+                                (convert.str2date(trans.execution_date, '%Y-%m-%d') +
+                                 self.payment_window)):
+                            best.append(candi)
+            # END HACK
+            else:
+                best = [
                 x for x in candidates
                 if (is_zero(x.move_id, ((x.debit or 0.0) - (x.credit or 0.0)) -
                             trans.statement_line_id.amount) and
@@ -327,6 +401,7 @@ class banking_import_transaction(orm.Model):
                     (convert.str2date(trans.execution_date, '%Y-%m-%d') +
                      self.payment_window))
             ]
+
             if len(best) == 1:
                 # Exact match
                 move_line = best[0]
@@ -868,7 +943,7 @@ class banking_import_transaction(orm.Model):
             if 'bank_import' in context:
                 if context['bank_import'] == "quickCamtImport":
                     quickCamtImport = True
-                del context['bank_import']
+                #del context['bank_import']
         # END HACK
 
         if not ids:
