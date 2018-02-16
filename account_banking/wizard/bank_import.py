@@ -371,7 +371,9 @@ class banking_import(orm.TransientModel):
 
             results.stat_loaded_cnt += 1
 
-        context['bank_import'] = "quickCamtImport"
+	### Disabled for general use. Enable this to speedup import if you only need to match statement references.
+	### In normal mode import is looking for partners which can have a huge impact on statement matching speed.
+        #context['bank_import'] = "quickCamtImport"
         import_transaction_obj.match(
             cr, uid, transaction_ids, results=results, context=context
         )
