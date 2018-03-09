@@ -18,6 +18,13 @@ class AccountBankingMandate(models.Model):
     _inherit = ['mail.thread']
     _order = 'signature_date desc'
 
+    def _get_default_partner_bank_id_domain(self):
+        if 'default_partner_id' in self.env.context:
+            return [('partner_id', '=', self.env.context.get(
+                'default_partner_id'))]
+        else:
+            return []
+
     format = fields.Selection(
         [('basic', 'Basic Mandate')], default='basic', required=True,
         string='Mandate Format', track_visibility='onchange')
@@ -28,7 +35,8 @@ class AccountBankingMandate(models.Model):
     )
     partner_bank_id = fields.Many2one(
         comodel_name='res.partner.bank', string='Bank Account',
-        track_visibility='onchange')
+        track_visibility='onchange',
+        domain=lambda self: self._get_default_partner_bank_id_domain(),)
     partner_id = fields.Many2one(
         comodel_name='res.partner', related='partner_bank_id.partner_id',
         string='Partner', store=True)
@@ -37,7 +45,9 @@ class AccountBankingMandate(models.Model):
         default=lambda self: self.env['res.company']._company_default_get(
             'account.banking.mandate'))
     unique_mandate_reference = fields.Char(
-        string='Unique Mandate Reference', track_visibility='onchange')
+        string='Unique Mandate Reference', track_visibility='onchange',
+        copy=False,
+    )
     signature_date = fields.Date(string='Date of Signature of the Mandate',
                                  track_visibility='onchange')
     scan = fields.Binary(string='Scan of the Mandate')
