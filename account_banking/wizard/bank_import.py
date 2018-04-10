@@ -311,29 +311,8 @@ class banking_import(orm.TransientModel):
                 continue
 
             # Hack by BT-mgerecke
-            # Get the account_statement_profile as bank statement object checks this.
-            # This field was introduced by bank-statement-reconcile/account_statement_ext.
-            profile_ids = statement_profile_obj.search(
-                cr, uid, [
-                    ('journal_id', '=', account_info.journal_id.id),
-                    ('commission_account_id', 'in', [account_info.journal_id.default_debit_account_id.id,
-                     account_info.journal_id.default_credit_account_id.id]),
-                ])
-            if not profile_ids:
-                results.log.append(
-                    _('No account statement profile found covering journal %(journal_id)s'
-                      ' with identical commision account, statement %(id)s skipped') % {
-                        'journal_id': account_info.journal_id.id,
-                        'id': statement.id,
-                    }
-                )
-                results.error_cnt += 1
-                continue
-            # If you do not have profile_ids remove, also remove "profile_id = profile_ids[0]" in statement_id below.
-            # End Hack
-
-            # Create the bank statement record
-            statement_id = statement_obj.create(cr, uid, dict(
+            # Use account_statement_profile depending if it is installed or not.
+            vals = dict(
                 name=statement.id,
                 journal_id=account_info.journal_id.id,
                 date=convert.date2str(statement.date),
@@ -345,8 +324,31 @@ class banking_import(orm.TransientModel):
                 banking_id=import_id,
                 company_id=company.id,
                 period_id=period_ids[0],
-		        profile_id=profile_ids[0],
-            ))
+            )
+            # Get the account_statement_profile as bank statement object checks this if installed.
+            # This field was introduced by bank-statement-reconcile/account_statement_ext.
+            if statement_profile_obj:
+                profile_ids = statement_profile_obj.search(
+                    cr, uid, [
+                        ('journal_id', '=', account_info.journal_id.id),
+                        ('commission_account_id', 'in', [account_info.journal_id.default_debit_account_id.id,
+                         account_info.journal_id.default_credit_account_id.id]),
+                    ])
+                if not profile_ids:
+                    results.log.append(
+                        _('No account statement profile found covering journal %(journal_id)s'
+                          ' with identical commision account, statement %(id)s skipped') % {
+                            'journal_id': account_info.journal_id.id,
+                            'id': statement.id,
+                        }
+                    )
+                    results.error_cnt += 1
+                    continue
+                vals.update({'profile_id': profile_ids[0]})
+            # End Hack
+
+            # Create the bank statement record
+            statement_id = statement_obj.create(cr, uid, vals)
             imported_statement_ids.append(statement_id)
 
             subno = 0
