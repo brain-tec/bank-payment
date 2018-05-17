@@ -215,19 +215,7 @@ class banking_import_transaction(orm.Model):
                 inum = invoice.number.upper()
                 if inum in ref or inum in msg:
                     return True
-                # HACK by BT-mgerecke
-                # Invoice name or bvr_reference is used by client.
-                if invoice.bvr_reference and len(invoice.bvr_reference) > 2:
-                    # TODO by BT-mgerecke
-                    # Remove whitespaces from BVR reference
-                    ibvrref = invoice.bvr_reference.upper().replace(" ", "")
-                    if ibvrref in ref or ibvrref in msg:
-                        return True
-                if invoice.name and len(invoice.name) > 2:
-                    iname = invoice.name.upper()
-                    if iname in ref or iname in msg:
-                        return True
-                # End Hack
+
             return False
 
         def _cached(move_line):
@@ -260,15 +248,6 @@ class banking_import_transaction(orm.Model):
             return self.pool.get('res.currency').is_zero(
                 cr, uid, trans.statement_id.currency, total)
 
-        # HACK by BT-mgerecke
-        # Speed-up matching for camt-import of POST.
-        quickCamtImport = False
-        if context:
-            if 'bank_import' in context:
-                if context['bank_import'] == "quickCamtImport":
-                    quickCamtImport = True
-        # END HACK
-
         digits = dp.get_precision('Account')(cr)[1]
         partial = False
 
@@ -296,44 +275,7 @@ class banking_import_transaction(orm.Model):
             # The manual usage of the sales journal creates moves that
             # are not tied to invoices. Thanks to Stefan Rijnhart for
             # reporting this.
-            # HACK by BT-mgerecke
-            # Exchange old code with quick database-queries.
-            if quickCamtImport and move_lines:
-                move_line_ids = [ ml.id for ml in move_lines ]
-                # Look for the bvr_reference and dates directly in the db which is time much faster than before.
-                cr.execute("SELECT move_id "
-                           "FROM account_invoice "
-                           "WHERE REPLACE(bvr_reference,' ','') = %s "
-                           "AND state = 'open' "
-                           "AND type = 'out_invoice' "
-                           "AND date_invoice <= %s "
-                           "ORDER BY id", (ref, (convert.str2date(trans.execution_date, '%Y-%m-%d') + self.payment_window)),)
-                result_move_ids = cr.fetchone()
-                if result_move_ids:
-                    cr.execute("SELECT id "
-                               "FROM account_move_line "
-                               "WHERE id in %s "
-                               "AND move_id in %s "
-                               "ORDER BY id", (tuple(move_line_ids),result_move_ids,))
-                result_move_line_ids = cr.fetchone()
-
-                if result_move_line_ids:
-                    filtered_candidates = []
-                    for ml_id in result_move_line_ids:
-                        if ml_id in move_line_ids:
-                            index = move_line_ids.index(ml_id)
-                            filtered_candidates.append(move_lines[index])
-
-                    # Checking the prefiltered candidates. Invoice check and reference matching was already done.
-                    candidates = [
-                        x for x in filtered_candidates
-                        if ((not _cached(x) or _remaining(x)) and
-                            (not partner_ids or
-                             x.invoice.partner_id.id in partner_ids))
-                    ]
-            # End Hack
-            else:
-                candidates = [
+            candidates = [
                 x for x in candidates or move_lines
                 if (x.invoice and has_id_match(x.invoice, ref, msg) and
                     convert.str2date(x.invoice.date_invoice, '%Y-%m-%d') <=
@@ -365,29 +307,7 @@ class banking_import_transaction(orm.Model):
             # amounts expected and received.
             #
             # TODO: currency coercing
-            # HACK by BT-mgerecke
-            # Exchange old code with quick database-queries.
-            if quickCamtImport and move_lines:
-                best = []
-                for candi in candidates:
-                    cr.execute("SELECT move_id, date, credit, debit "
-                               "FROM account_move_line "
-                               "WHERE id = %s ", (candi.id,))
-                    result_candi = cr.fetchone()
-                    if result_candi:
-                        move_id = result_candi[0]
-                        date = result_candi[1]
-                        credit = result_candi[2]
-                        debit = result_candi[3]
-                        if (is_zero(move_id, ((debit or 0.0) - (credit or 0.0)) -
-                                             trans.statement_line_id.amount) and
-                                convert.str2date(date, '%Y-%m-%d') <=
-                                (convert.str2date(trans.execution_date, '%Y-%m-%d') +
-                                 self.payment_window)):
-                            best.append(candi)
-            # END HACK
-            else:
-                best = [
+            best = [
                 x for x in candidates
                 if (is_zero(x.move_id, ((x.debit or 0.0) - (x.credit or 0.0)) -
                             trans.statement_line_id.amount) and
@@ -395,7 +315,6 @@ class banking_import_transaction(orm.Model):
                     (convert.str2date(trans.execution_date, '%Y-%m-%d') +
                      self.payment_window))
             ]
-
             if len(best) == 1:
                 # Exact match
                 move_line = best[0]
@@ -455,16 +374,6 @@ class banking_import_transaction(orm.Model):
                     # invoice_obj.write(cr, uid, [invoice.id], {
                     #     'state': 'paid'
                     #  })
-                # HACK by BT-mgerecke
-                # TODO: Need to set the writeoff account! Otherwise error in SQL-Query!
-                # bt#398 Do writeoff if client payed too much.
-                #elif abs(expected) < abs(found):
-                #    trans.payment_option = 'with_writeoff'
-                # TODO
-                # bt#398 Do writeoff if difference is very small.
-                #elif abs(expected - found) < 0.05:
-                #    trans.payment_option = 'with_writeoff'
-                # END HACK
                 elif abs(expected) > abs(found):
                     # Partial payment, reuse invoice
                     _cache(move_line, expected - found)
@@ -582,11 +491,6 @@ class banking_import_transaction(orm.Model):
         # Define the voucher line
         vch_line = {
             # 'voucher_id': v_id,
-            # HACK by MG
-            # bt#398 Invoice name missing in Journal Entry.
-            'name': transaction.move_line_id.name,
-            'partner_id': transaction.move_line_id.partner_id,
-            # END HACK
             'move_line_id': transaction.move_line_id.id,
             'reconcile': True,
             'amount': line_amount,
@@ -930,16 +834,6 @@ class banking_import_transaction(orm.Model):
         return False
 
     def match(self, cr, uid, ids, results=None, context=None):
-        # HACK by BT-mgerecke
-        # Speed-up matching for camt-import of POST.
-        quickCamtImport = False
-        if context:
-            if 'bank_import' in context:
-                if context['bank_import'] == "quickCamtImport":
-                    quickCamtImport = True
-                #del context['bank_import']
-        # END HACK
-
         if not ids:
             return True
 
@@ -1104,10 +998,10 @@ class banking_import_transaction(orm.Model):
                 if transaction.statement_line_id.state == 'confirmed':
                     raise orm.except_orm(
                         _("Cannot perform match"),
-                        _("Cannot perform match on a confirmed transaction"))
+                        _("Cannot perform match on a confirmed transction"))
             else:
                 values = {
-                    'name': '%s.%s' % (transaction.statement or transaction.statement_id.name,
+                    'name': '%s.%s' % (transaction.statement,
                                        transaction.transaction),
                     'date': transaction.execution_date,
                     'amount': transaction.transferred_amount,
@@ -1214,9 +1108,7 @@ class banking_import_transaction(orm.Model):
                 )
                 if partner_banks:
                     partner_ids = [x.partner_id.id for x in partner_banks]
-                # HACK by BT-mgerecke
-                # Disable search for partner if we want to be fast.
-                elif transaction.remote_owner and not quickCamtImport:
+                elif transaction.remote_owner:
                     country_id = banktools.get_country_id(
                         self.pool, cr, uid, transaction, context=context)
                     partner_id = banktools.get_partner(
@@ -1261,20 +1153,10 @@ class banking_import_transaction(orm.Model):
                 # invoice, automatic invoicing on bank costs will create
                 # these, and invoice matching still has to be done.
 
-                # HACK by BT-mgerecke
-                # For quick comparation match only references otherwise go with partner info.
-                if quickCamtImport:
-                    transaction, move_info, remainder = self._match_invoice(
-                        cr, uid, transaction, move_lines, False, partner_banks,
-                        results['log'], linked_invoices, context=context)
-                else:
-                # TODO by BT-mgerecke
-                # Get also parent/child partners of partner_ids?
-                    transaction, move_info, remainder = self._match_invoice(
-                        cr, uid, transaction, move_lines, partner_ids,
-                        partner_banks, results['log'], linked_invoices,
-                        context=context)
-                # End HACK
+                transaction, move_info, remainder = self._match_invoice(
+                    cr, uid, transaction, move_lines, partner_ids,
+                    partner_banks, results['log'], linked_invoices,
+                    context=context)
                 if remainder:
                     injected.append(self.browse(cr, uid, remainder, context))
 
@@ -1302,8 +1184,6 @@ class banking_import_transaction(orm.Model):
             values = {'account_id': account_id}
             self_values = {}
             if move_info:
-                # Write payment_option again in case something changed.
-                self_values = {'payment_option': transaction.payment_option}
                 results['trans_matched_cnt'] += 1
                 self_values.update(
                     self.move_info2values(move_info))
@@ -1323,9 +1203,6 @@ class banking_import_transaction(orm.Model):
             statement_line_obj.write(
                 cr, uid, transaction.statement_line_id.id, values, context)
             self.write(cr, uid, transaction.id, self_values, context)
-            if move_info:
-                # Do automatic reconcilliation
-                self._confirm_move(cr, uid, transaction.id, context=None)
             if not injected:
                 i += 1
 
