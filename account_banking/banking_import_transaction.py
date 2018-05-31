@@ -1323,9 +1323,9 @@ class banking_import_transaction(orm.Model):
             statement_line_obj.write(
                 cr, uid, transaction.statement_line_id.id, values, context)
             self.write(cr, uid, transaction.id, self_values, context)
-            if move_info:
-                # Do automatic reconcilliation
-                self._confirm_move(cr, uid, transaction.id, context=None)
+            # if move_info:
+            #     # Do automatic reconcilliation
+            #     self._confirm_move(cr, uid, transaction.id, context=None)
             if not injected:
                 i += 1
 

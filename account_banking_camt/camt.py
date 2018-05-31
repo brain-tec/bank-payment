@@ -136,10 +136,21 @@ class CamtParser(models.parser):
                 ns, party_node[0], './ns:PstlAdr/ns:Ctry', transaction,
                 'remote_owner_country'
             )
-            address_node = party_node[0].xpath(
+            self.add_value_from_node(
+                ns, party_node[0], './ns:PstlAdr/ns:TwnNm', transaction,
+                'remote_owner_city'
+            )
+            self.add_value_from_node(
+                ns, party_node[0], './ns:PstlAdr/ns:PstCd', transaction,
+                'remote_owner_postalcode'
+            )
+            address_nodes = party_node[0].xpath(
                 './ns:PstlAdr/ns:AdrLine', namespaces={'ns': ns})
-            if address_node:
-                transaction['remote_owner_address'] = address_node
+            self.add_value_from_node(
+                ns, party_node[0], './ns:PstlAdr/ns:AdrLine', transaction,
+                'remote_owner_address', ' '
+            )
+
         # Get remote_account from iban or from domestic account:
         account_node = node.xpath(
             './ns:RltdPties/ns:%sAcct/ns:Id' % party_type,
@@ -190,22 +201,24 @@ class CamtParser(models.parser):
         )
         details_nodes = node.xpath(
             './ns:NtryDtls/ns:TxDtls', namespaces={'ns': ns})
-        if len(details_nodes) == 0:
-            return self.get_real_transaction_from_data(transaction_base)
+
         transactions = []
-        for i, dnode in enumerate(details_nodes):
-            transaction_data = copy(transaction_base)
-            self.parse_transaction_details(ns, dnode, transaction_data)
-            # transactions['data'] should be a synthetic xml snippet which
-            # contains only the TxDtls that's relevant.
-            data = copy(node)
-            for j, dnode in enumerate(data.xpath(
-                    './ns:NtryDtls/ns:TxDtls', namespaces={'ns': ns})):
-                if j != i:
-                    dnode.getparent().remove(dnode)
-            transaction_data['data'] = etree.tostring(data)
-            # Put all known parameter into the transaction object.
-            transactions.append(bank_transaction(transaction_data))
+        if len(details_nodes) == 0:
+            transactions.append(bank_transaction(transaction_base))
+        else:
+            for i, dnode in enumerate(details_nodes):
+                transaction_data = copy(transaction_base)
+                self.parse_transaction_details(ns, dnode, transaction_data)
+                # transactions['data'] should be a synthetic xml snippet which
+                # contains only the TxDtls that's relevant.
+                data = copy(node)
+                for j, dnode in enumerate(data.xpath(
+                        './ns:NtryDtls/ns:TxDtls', namespaces={'ns': ns})):
+                    if j != i:
+                        dnode.getparent().remove(dnode)
+                transaction_data['data'] = etree.tostring(data)
+                # Put all known parameter into the transaction object.
+                transactions.append(bank_transaction(transaction_data))
         return transactions
 
     def get_balance_amounts(self, ns, node):
