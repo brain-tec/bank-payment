@@ -146,11 +146,24 @@ def get_company_bank_account(pool, cr, uid, account_number, currency,
     if not bank_accounts:
         return False
     elif len(bank_accounts) != 1:
-        log.append(
-            _('More than one bank account was found with the same number '
-              '%(account_no)s') % dict(account_no=account_number)
-        )
-        return False
+        # if there are more than one company bank account with the same
+        # account_number, we have to take the one with the same currency
+        # if account_currency == NULL ==> file currency should be company currency
+
+        for bank_account in bank_accounts:
+            if ((bank_account.journal_id and bank_account.journal_id.currency
+                 and currency == bank_account.journal_id.currency.name)
+                    or (not (bank_account.journal_id and bank_account.journal_id.currency)
+                        and currency == company.currency_id.name)):
+                bank_accounts = [bank_account]
+                break
+
+        if len(bank_accounts) != 1:
+            log.append(
+                _('More than one bank account was found with the same number '
+                  '%(account_no)s') % dict(account_no=account_number)
+            )
+            return False
     if bank_accounts[0].partner_id.id != company.partner_id.id:
         log.append(
             _('Account %(account_no)s is not owned by %(partner)s')
