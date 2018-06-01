@@ -126,6 +126,15 @@ class AccountPaymentOrder(models.Model):
                     payment_info, 'CdtTrfTxInf')
                 payment_identification = etree.SubElement(
                     credit_transfer_transaction_info, 'PmtId')
+                # HACK by BT-mgerecke
+                # Workaround for Züricher Kantonalbank. They made optional element mandatory.
+                # line.name contains "L"+<line.id> which is unique in Odoo.
+                instruction_identification = etree.SubElement(
+                    payment_identification, 'InstrId')
+                instruction_identification.text = self._prepare_field(
+                    'Instruction Identification', 'line.name',
+                    {'line': line}, 35, gen_args=gen_args)
+                # End HACK
                 end2end_identification = etree.SubElement(
                     payment_identification, 'EndToEndId')
                 end2end_identification.text = self._prepare_field(
