@@ -314,13 +314,29 @@ class AccountPaymentOrder(models.Model):
         In some localization (l10n_ch_sepa for example), they need the
         bank_line argument"""
         assert order in ('B', 'C'), "Order can be 'B' or 'C'"
-        if partner_bank.bank_bic:
+        if partner_bank.bank_id.csmi == 'BIC' and partner_bank.bank_bic:
             party_agent = etree.SubElement(parent_node, '%sAgt' % party_type)
             party_agent_institution = etree.SubElement(
                 party_agent, 'FinInstnId')
             party_agent_bic = etree.SubElement(
                 party_agent_institution, gen_args.get('bic_xml_tag'))
             party_agent_bic.text = partner_bank.bank_bic
+        elif partner_bank.bank_id.csmi != 'BIC' and partner_bank.bank_id.csmi_number:
+            party_agent = etree.SubElement(
+                parent_node, '%sAgt' % party_type)
+            party_agent_institution = etree.SubElement(
+                party_agent, 'FinInstnId')
+            party_agent_csmi = etree.SubElement(
+                party_agent_institution, 'ClrSysMmbId')
+            party_agent_csmi_identification = etree.SubElement(
+                party_agent_csmi, 'ClrSysId')
+            party_agent_csmi_identification_code = etree.SubElement(
+                party_agent_csmi_identification, 'Cd')
+            party_agent_csmi_identification_code.text = partner_bank.bank_id.csmi
+
+            party_agent_csmi_identification_member_id = etree.SubElement(
+                party_agent_csmi, 'MmbId')
+            party_agent_csmi_identification_member_id.text = partner_bank.bank_id.csmi_number
         else:
             if order == 'B' or (
                     order == 'C' and gen_args['payment_method'] == 'DD'):
