@@ -337,6 +337,32 @@ class AccountPaymentOrder(models.Model):
             party_agent_csmi_identification_member_id = etree.SubElement(
                 party_agent_csmi, 'MmbId')
             party_agent_csmi_identification_member_id.text = partner_bank.bank_id.csmi_number
+            party_agent_name = etree.SubElement(
+                party_agent_institution, 'Nm')
+            party_agent_name.text = partner_bank.bank_id.name
+            party_agent_postal_address = etree.SubElement(
+                party_agent_institution, 'PstlAdr')
+            if partner_bank.bank_id.street:
+                party_agent_postal_street_name = etree.SubElement(
+                party_agent_postal_address, 'StrtNm')
+                party_agent_postal_street_name.text = partner_bank.bank_id.street
+            if partner_bank.bank_id.zip:
+                party_agent_postal_street_zip = etree.SubElement(
+                party_agent_postal_address, 'PstCd')
+                party_agent_postal_street_zip.text = partner_bank.bank_id.zip
+            if partner_bank.bank_id.city:
+                party_agent_postal_street_city = etree.SubElement(
+                party_agent_postal_address, 'TwnNm')
+                party_agent_postal_street_city.text = partner_bank.bank_id.city
+            if not partner_bank.bank_id.country:
+                raise UserError(
+                    _("Country of the bank '%s' is missing. This is needed for international payments.")
+                    % (partner_bank.bank_id.name))
+            else:
+                party_agent_postal_street_country = etree.SubElement(
+                party_agent_postal_address, 'Ctry')
+                party_agent_postal_street_country.text = partner_bank.bank_id.country.code
+
         else:
             if order == 'B' or (
                     order == 'C' and gen_args['payment_method'] == 'DD'):
