@@ -19,6 +19,7 @@ class ResBank(models.Model):
                     "A valid BIC contains 8 or 11 characters. The BIC '%s' "
                     "contains %d characters, so it is not valid.")
                     % (bank.bic, len(bank.bic)))
+    # in v9, on res.partner.bank bank_bic is a related of bank_id.bic
 
     @api.multi
     @api.constrains('csmi_number')
@@ -108,7 +109,7 @@ class ResBank(models.Model):
         return True
 
     csmi = fields.Selection(
-        [('BIC', _('Bank with BIC')),
+        [('other', _('Other Financial Institutions')),
          ('ATBLZ', _('Austrian Bankleitzahl - Bank Branch code used in Austria')),
          ('AUBSB', _('Australian Bank State Branch Code (BSB) - Bank Branch code used in Australia')),
          ('CACPA', _('Canadian Payments Association Payment Routing Number - Bank Branch code used in Canada')),
@@ -137,7 +138,7 @@ class ResBank(models.Model):
          ('ZANCC', _('South African National Clearing Code - Bank Branch code used in South Africa'))
          ],
         string='Clearing System Member Identification',
-        default='BIC',
+        default='other',
         required=True,
         translate=True,
         help="Clearing System Member Identification - Not all Financial Institutions have BIC. To do ISO 20022 "
@@ -147,7 +148,6 @@ class ResBank(models.Model):
         string='Clearing System Member Identification Number',
         size=12,
         required=False,
-        help="If Clearing System Member Identification is not 'BIC', Clearing System Member Identification Number "
-             "has to be set."
+        help="If Clearing System Member Identification is different to 'Other Financial Institutions', "
+             "Clearing System Member Identification Number has to be set."
     )
-# in v9, on res.partner.bank bank_bic is a related of bank_id.bic
