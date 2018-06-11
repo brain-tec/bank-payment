@@ -8,7 +8,7 @@
       <field name="arch" type="xml">
         <field name="bic" position="after">
           <field name="csmi"/>
-          <field name="csmi_number" attrs="{'invisible': [('csmi', '=', 'BIC')], 'required': [('csmi', '!=', 'BIC')]}"/>
+          <field name="csmi_number" attrs="{'invisible': [('csmi', '=', 'other')], 'required': [('csmi', '!=', 'other')]}"/>
         </field>
       </field>
     </record>

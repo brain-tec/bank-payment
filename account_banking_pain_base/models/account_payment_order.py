@@ -314,14 +314,14 @@ class AccountPaymentOrder(models.Model):
         In some localization (l10n_ch_sepa for example), they need the
         bank_line argument"""
         assert order in ('B', 'C'), "Order can be 'B' or 'C'"
-        if partner_bank.bank_id.csmi == 'BIC' and partner_bank.bank_bic:
+        if partner_bank.bank_id.csmi == 'other' and partner_bank.bank_bic:
             party_agent = etree.SubElement(parent_node, '%sAgt' % party_type)
             party_agent_institution = etree.SubElement(
                 party_agent, 'FinInstnId')
             party_agent_bic = etree.SubElement(
                 party_agent_institution, gen_args.get('bic_xml_tag'))
             party_agent_bic.text = partner_bank.bank_bic
-        elif partner_bank.bank_id.csmi != 'BIC' and partner_bank.bank_id.csmi_number:
+        elif partner_bank.bank_id.csmi != 'other' and partner_bank.bank_id.csmi_number:
             party_agent = etree.SubElement(
                 parent_node, '%sAgt' % party_type)
             party_agent_institution = etree.SubElement(
