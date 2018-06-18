@@ -863,10 +863,9 @@ msgid "More than one possible match found for partner with name %(name)s"
 msgstr "Mehrere Übereinstimmungen für Partner mit Namen %(name)s gefunden"
 
 #. module: account_banking
-#: code:addons/account_banking/wizard/banktools.py:150
+#: code:addons/account_banking/wizard/banktools.py:155
 #, python-format
-msgid ""
-"More than one bank account was found with the same number %(account_no)s"
+msgid "More than one bank account was found with the same number %(account_no)s"
 msgstr "Mehrere Bankkonten mit Nummer %(account_no)s gefunden"
 
 #. module: account_banking

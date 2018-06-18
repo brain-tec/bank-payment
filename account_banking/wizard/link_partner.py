@@ -23,6 +23,7 @@ import ast
 from openerp.osv import orm, fields
 from openerp.tools.translate import _
 from . import banktools
+import re
 
 
 class link_partner(orm.TransientModel):
@@ -101,16 +102,8 @@ class link_partner(orm.TransientModel):
             if 'customer' not in vals and statement_line.amount > 0:
                 vals['customer'] = True
 
-            address_list = []
-            try:
-                address_list = ast.literal_eval(
-                    transaction.remote_owner_address or [])
-            except ValueError:
-                pass
-            if address_list and not vals.get('street'):
-                vals['street'] = address_list.pop(0)
-            if address_list and not vals.get('street2'):
-                vals['street2'] = address_list.pop(0)
+            if transaction.remote_owner_address and not vals.get('street'):
+                vals['street'] = transaction.remote_owner_address
             if transaction.remote_owner_postalcode and not vals.get('zip'):
                 vals['zip'] = transaction.remote_owner_postalcode
             if transaction.remote_owner_city and not vals.get('city'):
@@ -155,7 +148,11 @@ class link_partner(orm.TransientModel):
     def link_partner(self, cr, uid, ids, context=None):
         statement_line_obj = self.pool.get(
             'account.bank.statement.line')
+        partner_bank_obj = self.pool.get(
+            'res.partner.bank')
         wiz = self.browse(cr, uid, ids[0], context=context)
+        partner_bank_id = False
+        partner_id = False
 
         if wiz.partner_id:
             partner_id = wiz.partner_id.id
@@ -170,24 +167,45 @@ class link_partner(orm.TransientModel):
             partner_id = self.pool.get('res.partner').create(
                 cr, uid, partner_vals, context=context)
 
-        partner_bank_id = banktools.create_bank_account(
-            self.pool, cr, uid, partner_id,
-            wiz.remote_account, wiz.name,
-            wiz.street, wiz.city,
-            wiz.country_id and wiz.country_id.id or False,
-            bic=wiz.statement_line_id.import_transaction_id.remote_bank_bic,
-            context=context)
+        if wiz.remote_account:
+            # check if account already created to relate it to the transaction
+            remote_account = re.sub(r'\s+', '', wiz.remote_account)
+            cr.execute('SELECT id FROM res_partner_bank '
+                       'where REPLACE(acc_number, \' \', \'\') = %s ', (remote_account, ))
+            partner_bank_ids = [x[0] for x in cr.fetchall() if x[0]]
+            if len(partner_bank_ids) > 0:
+                partner_bank_id = partner_bank_ids[0]
+            else:
+                try:
+                    # if acount number not found in the database, create it
+                    partner_bank_id = banktools.create_bank_account(
+                        self.pool, cr, uid, partner_id,
+                        wiz.remote_account, wiz.name,
+                        wiz.street, wiz.city,
+                        wiz.country_id and wiz.country_id.id or False,
+                        bic=wiz.statement_line_id.import_transaction_id.remote_bank_bic,
+                        context=context)
+                except Exception:
+                    #if not created continue wit the partner assignation
+                    partner_bank_id = False
+                    pass
 
+        # Search for all lines with the same account_id to assign the partner
         statement_line_ids = statement_line_obj.search(
             cr, uid,
             [('import_transaction_id.remote_account', '=', wiz.remote_account),
              ('partner_bank_id', '=', False),
              ('state', '=', 'draft')], context=context)
-        statement_line_obj.write(
-            cr, uid, statement_line_ids,
-            {'partner_bank_id': partner_bank_id,
-             'partner_id': partner_id}, context=context)
 
+        if partner_bank_id:
+            statement_line_obj.write(
+                cr, uid, statement_line_ids,
+                {'partner_bank_id': partner_bank_id,
+                 'partner_id': partner_id}, context=context)
+        else:
+            statement_line_obj.write(
+                cr, uid, statement_line_ids,
+                {'partner_id': partner_id}, context=context)
         return {'type': 'ir.actions.act_window_close'}
 
     def create_act_window(self, cr, uid, ids, nodestroy=True, context=None):
