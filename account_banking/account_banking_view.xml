@@ -183,8 +183,7 @@
             <field name="inherit_id" ref="account.view_bank_statement_tree" />
             <field name="model">account.bank.statement</field>
             <field name="arch" type="xml">
-                <!-- Remove period from bank statement -->
-                <field name="period_id" position="replace">
+                <field name="name" position="after">
                     <!-- Add invisible column for identification of import file
                     -->
                     <field name="banking_id" invisible="True" />
@@ -202,7 +201,9 @@
                             <field colspan="4" name="move_line_ids" nolabel="1"/>
                         </page>
                     </page>
-                    <field name="period_id" position="replace"/>
+                    <field name="period_id" position="attributes">
+                        <attribute name="invisible">True</attribute>
+                    </field>
 
                     <xpath expr="//page[@string='Transactions']/field/tree"
                            position="attributes">
