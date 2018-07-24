@@ -317,7 +317,7 @@ class account_bank_statement(orm.Model):
     }
 
     _defaults = {
-        'period_id': False,
+    #    'period_id': False,
     }
 
     def _check_company_id(self, cr, uid, ids, context=None):
