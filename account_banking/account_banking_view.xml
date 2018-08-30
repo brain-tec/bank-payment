@@ -201,9 +201,9 @@
                             <field colspan="4" name="move_line_ids" nolabel="1"/>
                         </page>
                     </page>
-                    <field name="period_id" position="attributes">
+                    <!--field name="period_id" position="attributes">
                         <attribute name="invisible">True</attribute>
-                    </field>
+                    </field-->
 
                     <xpath expr="//page[@string='Transactions']/field/tree"
                            position="attributes">
@@ -243,10 +243,12 @@
                                 />
                         <!-- TODO set partner_id when partner_bank_id changes -->
                         <field name="partner_bank_id"/>
+                        <field name="period_id"/>
                     </xpath>
                     <xpath expr="//field[@name='line_ids']/form//field[@name='partner_id']"
                            position="after">
                         <field name="partner_bank_id"/>
+                        <field name="period_id"/>
                     </xpath>
                     <xpath expr="//field[@name='line_ids']/tree//field[@name='account_id']"
                            position="attributes">
