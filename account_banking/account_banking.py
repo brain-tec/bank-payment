@@ -303,12 +303,6 @@ class account_bank_statement(orm.Model):
     _inherit = 'account.bank.statement'
 
     _columns = {
-        'period_id': fields.many2one(
-            'account.period',
-            'Period',
-            required=False,
-            readonly=True,
-        ),
         'banking_id': fields.many2one(
             'account.banking.imported.file',
             'Imported File',
