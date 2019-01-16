@@ -415,8 +415,8 @@ class AccountPaymentOrder(models.Model):
             ###########################################################
 
             # if gen_args.get('pain_flavor').startswith(
-            #         'pain.001.001.') or gen_args.get('pain_flavor').startswith(
-            #         'pain.008.001.'):
+            #         'pain.001.001.') or gen_args.get('pain_flavor')
+            #         .startswith('pain.008.001.'):
             #     if partner.zip:
             #         pstcd = etree.SubElement(postal_address, 'PstCd')
             #         pstcd.text = self._prepare_field(
