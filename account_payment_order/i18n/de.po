@@ -34,7 +34,7 @@ msgid ""
 "%d payment lines added to the new draft payment order %s which has been "
 "automatically created."
 msgstr ""
-"%d Zahlungszeilen, wurden dem bestehenden Zahlungsauftrag %d hinzugefügt."
+"%d Zahlungszeilen, wurden dem bestehenden Zahlungsauftrag %s hinzugefügt."
 
 #. module: account_payment_order
 #: model:ir.ui.view,arch_db:account_payment_order.print_account_payment_order_document
