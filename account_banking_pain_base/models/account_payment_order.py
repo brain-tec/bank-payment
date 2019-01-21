@@ -326,25 +326,17 @@ class AccountPaymentOrder(models.Model):
         In some localization (l10n_ch_sepa for example), they need the
         bank_line argument"""
         assert order in ('B', 'C'), "Order can be 'B' or 'C'"
-        if partner_bank.bank_bic:
-            party_agent = etree.SubElement(parent_node, '%sAgt' % party_type)
+        if order == 'B' or (
+                order == 'C' and gen_args['payment_method'] == 'DD'):
+            party_agent = etree.SubElement(
+                parent_node, '%sAgt' % party_type)
             party_agent_institution = etree.SubElement(
                 party_agent, 'FinInstnId')
-            party_agent_bic = etree.SubElement(
-                party_agent_institution, gen_args.get('bic_xml_tag'))
-            party_agent_bic.text = partner_bank.bank_bic
-        else:
-            if order == 'B' or (
-                    order == 'C' and gen_args['payment_method'] == 'DD'):
-                party_agent = etree.SubElement(
-                    parent_node, '%sAgt' % party_type)
-                party_agent_institution = etree.SubElement(
-                    party_agent, 'FinInstnId')
-                party_agent_other = etree.SubElement(
-                    party_agent_institution, 'Othr')
-                party_agent_other_identification = etree.SubElement(
-                    party_agent_other, 'Id')
-                party_agent_other_identification.text = 'NOTPROVIDED'
+            party_agent_other = etree.SubElement(
+                party_agent_institution, 'Othr')
+            party_agent_other_identification = etree.SubElement(
+                party_agent_other, 'Id')
+            party_agent_other_identification.text = 'NOTPROVIDED'
             # for Credit Transfers, in the 'C' block, if BIC is not provided,
             # we should not put the 'Creditor Agent' block at all,
             # as per the guidelines of the EPC
