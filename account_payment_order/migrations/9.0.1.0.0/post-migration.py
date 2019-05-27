@@ -19,6 +19,23 @@ def map_payment_type(cr):
         openupgrade.get_legacy_name('state'), 'state',
         [('done', 'uploaded'), ('sent', 'generated')],
         table='account_payment_order', write='sql')
+    # Populate these missing related fields
+    openupgrade.logged_query(
+        cr, """
+        UPDATE bank_payment_line bpl
+        SET payment_type = apo.payment_type,
+            state = apo.state
+        FROM account_payment_order apo
+        WHERE bpl.order_id = apo.id""",
+    )
+    openupgrade.logged_query(
+        cr, """
+        UPDATE account_payment_line apl
+        SET payment_type = apo.payment_type,
+            state = apo.state
+        FROM account_payment_order apo
+        WHERE apl.order_id = apo.id""",
+    )
 
 
 @openupgrade.migrate(use_env=True)

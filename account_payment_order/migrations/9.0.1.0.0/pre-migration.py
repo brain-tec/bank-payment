@@ -160,6 +160,8 @@ def populate_computed_fields(env):
     openupgrade.add_fields(env, [
         ('company_currency_id', 'account.payment.order',
          'account_payment_order', 'many2one', False, 'account_payment_order'),
+        ('payment_type', 'account.payment.line', 'account_payment_line',
+         'selection', False, 'account_payment_order'),
         ('partner_id', 'bank.payment.line', 'bank_payment_line',
          'many2one', False, 'account_payment_order'),
         ('payment_type', 'bank.payment.line', 'bank_payment_line',
@@ -172,9 +174,9 @@ def populate_computed_fields(env):
     openupgrade.logged_query(
         cr, """
         UPDATE account_payment_order apo
-        SET company_currency_id = apm.currency_id
-        FROM account_payment_mode apm
-        WHERE apm.id = apo.payment_mode_id""",
+        SET company_currency_id = rc.currency_id
+        FROM res_company rc
+        WHERE rc.id = apo.company_id""",
     )
     openupgrade.logged_query(
         cr, """
@@ -185,27 +187,20 @@ def populate_computed_fields(env):
     )
     openupgrade.logged_query(
         cr, """
-        UPDATE bank_payment_line bpl
-        SET payment_type = apo.payment_type,
-            state = apo.state
-        FROM account_payment_order apo
-        WHERE bpl.order_id = apo.id""",
-    )
-    openupgrade.logged_query(
-        cr, """
         WITH currency_rate as (%s)
         UPDATE bank_payment_line bpl
         SET amount_company_currency = (
             bpl.amount_currency / COALESCE(cr.rate, 1.0)
         )
         FROM bank_payment_line bpl2
-        INNER JOIN payment_line apl ON apl.bank_line_id = bpl2.id
+        INNER JOIN account_payment_line apl ON apl.bank_line_id = bpl2.id
+        INNER JOIN account_move_line aml ON aml.id = apl.move_line_id
         LEFT JOIN currency_rate cr ON (
-            cr.currency_id = apl.currency
+            cr.currency_id = apl.currency_id
             AND cr.company_id = bpl2.company_id
-            AND cr.date_start <= COALESCE(apl.date, now())
+            AND cr.date_start <= COALESCE(apl.date, aml.date_maturity)
             AND (cr.date_end is null
-                OR cr.date_end > COALESCE(apl.date, now()))
+                OR cr.date_end > COALESCE(apl.date, aml.date_maturity))
         )
         WHERE bpl2.id = bpl.id
         """, (AsIs(env['res.currency']._select_companies_rates()), ),
