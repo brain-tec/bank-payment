@@ -112,10 +112,9 @@ class AccountPaymentOrder(models.Model):
             if record.payment_mode_id.bank_account_link == 'fixed':
                 record.allowed_journal_ids = (
                     record.payment_mode_id.fixed_journal_id)
-                print("")
             elif record.payment_mode_id.bank_account_link == 'variable':
                 record.allowed_journal_ids = (
-                    self.payment_mode_id.variable_journal_ids)
+                    record.payment_mode_id.variable_journal_ids)
 
     @api.multi
     def unlink(self):
