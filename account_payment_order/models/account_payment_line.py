@@ -1,7 +1,7 @@
 # © 2015-2016 Akretion - Alexis de Lattre <alexis.delattre@akretion.com>
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html).
 
-from odoo import models, fields, api, _
+from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
 
@@ -56,7 +56,9 @@ class AccountPaymentLine(models.Model):
         ], string='Communication Type', required=True, default='normal')
     # v8 field : state
     bank_line_id = fields.Many2one(
-        'bank.payment.line', string='Bank Payment Line', readonly=True)
+        'bank.payment.line', string='Bank Payment Line', readonly=True,
+        index=True,
+    )
 
     _sql_constraints = [(
         'name_company_unique',

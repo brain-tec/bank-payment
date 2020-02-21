@@ -3,7 +3,7 @@
 # © 2016 Akretion (Alexis de Lattre <alexis.delattre@akretion.com>)
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html).
 
-from odoo import models, fields, api, _
+from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
 
@@ -71,7 +71,8 @@ class AccountInvoice(models.Model):
                 lambda x: (
                     not x.reconciled and x.payment_mode_id.payment_order_ok and
                     x.account_id.internal_type in ('receivable', 'payable') and
-                    not x.payment_line_ids
+                    not any(p_state in ('draft', 'open', 'generated')
+                            for p_state in x.payment_line_ids.mapped('state'))
                 )
             )
             if not applicable_lines:
@@ -103,12 +104,12 @@ class AccountInvoice(models.Model):
                     line.create_payment_line_from_move_line(payorder)
                     count += 1
                 if new_payorder:
-                    inv.message_post(_(
+                    inv.message_post(body=_(
                         '%d payment lines added to the new draft payment '
                         'order %s which has been automatically created.')
                         % (count, payorder.name))
                 else:
-                    inv.message_post(_(
+                    inv.message_post(body=_(
                         '%d payment lines added to the existing draft '
                         'payment order %s.')
                         % (count, payorder.name))

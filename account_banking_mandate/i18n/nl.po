@@ -9,14 +9,15 @@ msgstr ""
 "Project-Id-Version: Odoo Server 11.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-03-09 14:56+0000\n"
-"PO-Revision-Date: 2018-03-09 14:56+0000\n"
-"Last-Translator: OCA Transbot <transbot@odoo-community.org>, 2017\n"
+"PO-Revision-Date: 2018-12-03 11:11+0000\n"
+"Last-Translator: Yung-Wa <yw.ng@onestein.nl>\n"
 "Language-Team: Dutch (https://www.transifex.com/oca/teams/23907/nl/)\n"
 "Language: nl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 3.3\n"
 
 #. module: account_banking_mandate
 #: model:ir.actions.act_window,help:account_banking_mandate.mandate_action
@@ -107,7 +108,7 @@ msgid "Cancelled"
 msgstr "Geannuleerd"
 
 #. module: account_banking_mandate
-#: code:addons/account_banking_mandate/models/account_banking_mandate.py:148
+#: code:addons/account_banking_mandate/models/account_banking_mandate.py:151
 #, python-format
 msgid ""
 "Cannot validate the mandate '%s' because it is not attached to a bank "
@@ -117,7 +118,7 @@ msgstr ""
 "gekoppeld is. "
 
 #. module: account_banking_mandate
-#: code:addons/account_banking_mandate/models/account_banking_mandate.py:144
+#: code:addons/account_banking_mandate/models/account_banking_mandate.py:147
 #, python-format
 msgid "Cannot validate the mandate '%s' without a date of signature."
 msgstr "Kan mandaat '%s' niet goedkeuren zonder een datum of handtekening."
@@ -134,8 +135,9 @@ msgstr "Bedrijf"
 
 #. module: account_banking_mandate
 #: model:ir.model,name:account_banking_mandate.model_res_partner
+#, fuzzy
 msgid "Contact"
-msgstr ""
+msgstr "Contact"
 
 #. module: account_banking_mandate
 #: model:ir.model.fields,field_description:account_banking_mandate.field_account_banking_mandate_create_uid
@@ -192,7 +194,7 @@ msgstr "Vervallen"
 #: model:ir.model.fields,field_description:account_banking_mandate.field_res_partner_valid_mandate_id
 #: model:ir.model.fields,field_description:account_banking_mandate.field_res_users_valid_mandate_id
 msgid "First Valid Mandate"
-msgstr ""
+msgstr "Eerste geldig Mandaat"
 
 #. module: account_banking_mandate
 #: model:ir.ui.view,arch_db:account_banking_mandate.view_mandate_form
@@ -203,7 +205,7 @@ msgstr "Formaat"
 #. module: account_banking_mandate
 #: selection:account.banking.mandate,type:0
 msgid "Generic Mandate"
-msgstr ""
+msgstr "Generieke Mandaat"
 
 #. module: account_banking_mandate
 #: model:ir.ui.view,arch_db:account_banking_mandate.view_mandate_search
@@ -258,19 +260,19 @@ msgid "Mandate Required"
 msgstr "Bankrekening verplicht"
 
 #. module: account_banking_mandate
-#: code:addons/account_banking_mandate/models/account_banking_mandate.py:192
+#: code:addons/account_banking_mandate/models/account_banking_mandate.py:211
 #, python-format
 msgid "Mandate should be in cancel state."
 msgstr "Mandaat moet in de 'annulleer' status zijn."
 
 #. module: account_banking_mandate
-#: code:addons/account_banking_mandate/models/account_banking_mandate.py:180
+#: code:addons/account_banking_mandate/models/account_banking_mandate.py:199
 #, python-format
 msgid "Mandate should be in draft or valid state."
 msgstr "Mandaat moet in de 'geldig' of 'concept' status zijn."
 
 #. module: account_banking_mandate
-#: code:addons/account_banking_mandate/models/account_banking_mandate.py:171
+#: code:addons/account_banking_mandate/models/account_banking_mandate.py:190
 #, python-format
 msgid "Mandate should be in draft state."
 msgstr "Mandaat moet in de 'concept' status zijn."
@@ -385,25 +387,28 @@ msgid ""
 "The bank payment line %s has a different company than that of the linked "
 "mandate %s)."
 msgstr ""
+"De bank betalingsregel %s is van een andere bedrijf dan de gekoppelde "
+"mandaat %s)."
 
 #. module: account_banking_mandate
-#: code:addons/account_banking_mandate/models/account_banking_mandate.py:97
+#: code:addons/account_banking_mandate/models/account_banking_mandate.py:100
 #, python-format
 msgid "The company of the mandate %s differs from the company of partner %s."
 msgstr ""
+"Het bedrijf van de mandaat %s verschilt van het bedrijf van de relatie %s."
 
 #. module: account_banking_mandate
-#: code:addons/account_banking_mandate/models/account_banking_mandate.py:81
+#: code:addons/account_banking_mandate/models/account_banking_mandate.py:84
 #, python-format
 msgid "The date of signature of mandate '%s' is in the future!"
 msgstr "De datum van de handtekening van mandaat '%s' is in de toekomts!"
 
 #. module: account_banking_mandate
-#: code:addons/account_banking_mandate/models/account_invoice.py:90
+#: code:addons/account_banking_mandate/models/account_invoice.py:91
 #, python-format
 msgid ""
 "The invoice %s has a different company than that of the linked mandate %s)."
-msgstr ""
+msgstr "De factuur %s is van een andere bedrijf dan de gekoppelde mandaat %s)."
 
 #. module: account_banking_mandate
 #: code:addons/account_banking_mandate/models/account_move_line.py:46
@@ -412,9 +417,11 @@ msgid ""
 "The item %s of journal %s has a different company than that of the linked "
 "mandate %s)."
 msgstr ""
+"De item %s van dagboek %s is van een andere bedrijf dan gekoppelde mandaat "
+"%s)."
 
 #. module: account_banking_mandate
-#: code:addons/account_banking_mandate/models/account_banking_mandate.py:87
+#: code:addons/account_banking_mandate/models/account_banking_mandate.py:90
 #, python-format
 msgid ""
 "The mandate '%s' can't have a date of last debit before the date of "
@@ -430,6 +437,8 @@ msgid ""
 "The payment line number %s a different company than that of the linked "
 "mandate %s)."
 msgstr ""
+"De betalingsregelnummer %s is van een andere bedrijf dan de gekoppelde "
+"mandaat %s)."
 
 #. module: account_banking_mandate
 #: code:addons/account_banking_mandate/models/account_payment_line.py:26
@@ -449,7 +458,7 @@ msgstr "Soort"
 #. module: account_banking_mandate
 #: model:ir.model.fields,field_description:account_banking_mandate.field_account_banking_mandate_type
 msgid "Type of Mandate"
-msgstr ""
+msgstr "Type Mandaat"
 
 #. module: account_banking_mandate
 #: model:ir.model.fields,field_description:account_banking_mandate.field_account_banking_mandate_unique_mandate_reference
@@ -474,38 +483,49 @@ msgid ""
 "You cannot change the company of Partner Bank %s, as there exists mandates "
 "referencing it that belong to another company."
 msgstr ""
+"U kunt het bedrijf van de relatiebank %s niet wijzigingen, omdat er mandaten "
+"bestaan die ernaar verwijzen en die tot een ander bedrijf behoren."
 
 #. module: account_banking_mandate
-#: code:addons/account_banking_mandate/models/account_banking_mandate.py:132
+#: code:addons/account_banking_mandate/models/account_banking_mandate.py:135
 #, python-format
 msgid ""
 "You cannot change the company of mandate %s, as there exists bank payment "
 "lines referencing it that belong to another company."
 msgstr ""
+"U kunt het bedrijf van mandaat %s niet wijzigen, omdat er "
+"bankbetalingsregels bestaan die verwijzen naar het bedrijf dat tot een ander "
+"bedrijf behoort."
 
 #. module: account_banking_mandate
-#: code:addons/account_banking_mandate/models/account_banking_mandate.py:114
+#: code:addons/account_banking_mandate/models/account_banking_mandate.py:117
 #, python-format
 msgid ""
 "You cannot change the company of mandate %s, as there exists invoices "
 "referencing it that belong to another company."
 msgstr ""
+"U kunt het bedrijf van mandaat %s niet wijzigen, omdat er facturen bestaan "
+"die ernaar verwijzen en die tot een ander bedrijf behoren."
 
 #. module: account_banking_mandate
-#: code:addons/account_banking_mandate/models/account_banking_mandate.py:123
+#: code:addons/account_banking_mandate/models/account_banking_mandate.py:126
 #, python-format
 msgid ""
 "You cannot change the company of mandate %s, as there exists journal items "
 "referencing it that belong to another company."
 msgstr ""
+"U kunt het bedrijf van mandaat %s niet wijzigen, omdat er boekingsregels "
+"naar verwijzen die van een ander bedrijf zijn."
 
 #. module: account_banking_mandate
-#: code:addons/account_banking_mandate/models/account_banking_mandate.py:105
+#: code:addons/account_banking_mandate/models/account_banking_mandate.py:108
 #, python-format
 msgid ""
 "You cannot change the company of mandate %s, as there exists payment lines "
 "referencing it that belong to another company."
 msgstr ""
+"U kunt het bedrijf van mandaat %s niet wijzigen, omdat er betalingsregels "
+"bestaan die verwijzen naar het bedrijf dat tot een ander bedrijf behoort."
 
 #. module: account_banking_mandate
 #: model:ir.ui.view,arch_db:account_banking_mandate.view_mandate_form
@@ -514,4 +534,4 @@ msgid ""
 "Do you want to continue?"
 msgstr ""
 "Een mandaat moet alleen teruggezet worden naar concept wanneer u deze per "
-"ongeluk heeft geannuleerd. Wilt u verdergaan? "
+"ongeluk heeft geannuleerd. Wilt u verdergaan?"

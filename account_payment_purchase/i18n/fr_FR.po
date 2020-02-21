@@ -29,8 +29,8 @@ msgid "Payment Mode"
 msgstr ""
 
 #. module: account_payment_purchase
-#: model:ir.model,name:account_payment_purchase.model_procurement_order
-msgid "Procurement"
+#: model:ir.model,name:account_payment_purchase.model_procurement_rule
+msgid "Procurement Rule"
 msgstr ""
 
 #. module: account_payment_purchase
@@ -47,13 +47,13 @@ msgid ""
 msgstr ""
 
 #. module: account_payment_purchase
-#: code:addons/account_payment_purchase/models/account_invoice.py:20
+#: code:addons/account_payment_purchase/models/account_invoice.py:23
 #, python-format
 msgid "Selected purchase order have different payment mode."
 msgstr ""
 
 #. module: account_payment_purchase
-#: code:addons/account_payment_purchase/models/account_invoice.py:27
+#: code:addons/account_payment_purchase/models/account_invoice.py:31
 #, python-format
 msgid "Selected purchase order have different supplier bank."
 msgstr ""
@@ -64,8 +64,8 @@ msgid "Supplier Bank Account"
 msgstr ""
 
 #. module: account_payment_purchase
-#: code:addons/account_payment_purchase/models/account_invoice.py:19
-#: code:addons/account_payment_purchase/models/account_invoice.py:26
+#: code:addons/account_payment_purchase/models/account_invoice.py:22
+#: code:addons/account_payment_purchase/models/account_invoice.py:30
 #, python-format
 msgid "Warning"
 msgstr ""
