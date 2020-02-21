@@ -20,13 +20,13 @@ msgstr ""
 "X-Generator: Weblate 3.0.1\n"
 
 #. module: account_payment_order
-#: code:addons/account_payment_order/models/account_invoice.py:111
+#: code:addons/account_payment_order/models/account_invoice.py:112
 #, python-format
 msgid "%d payment lines added to the existing draft payment order %s."
 msgstr "%d líneas de pago añadidas a la orden de pago en borrador %s."
 
 #. module: account_payment_order
-#: code:addons/account_payment_order/models/account_invoice.py:106
+#: code:addons/account_payment_order/models/account_invoice.py:107
 #, python-format
 msgid ""
 "%d payment lines added to the new draft payment order %s which has been "
@@ -372,14 +372,14 @@ msgid "Debit Orders"
 msgstr "Órdenes de cobro"
 
 #. module: account_payment_order
-#: code:addons/account_payment_order/models/account_payment_order.py:442
+#: code:addons/account_payment_order/models/account_payment_order.py:444
 #, python-format
 msgid "Debit bank line %s"
 msgstr "Línea de adeudo de banco %s"
 
 #. module: account_payment_order
 #: code:addons/account_payment_order/models/account_payment_order.py:371
-#: code:addons/account_payment_order/models/account_payment_order.py:392
+#: code:addons/account_payment_order/models/account_payment_order.py:394
 #, python-format
 msgid "Debit order %s"
 msgstr "Orden de cobro %s"
@@ -648,6 +648,12 @@ msgid "Keep empty for using all journals"
 msgstr "Dejar vacío para usar todos los diarios"
 
 #. module: account_payment_order
+#: model:ir.ui.view,arch_db:account_payment_order.account_payment_line_create_form
+#, fuzzy
+msgid "Keep empty to use all partners"
+msgstr "Dejar vacío para usar todos los diarios"
+
+#. module: account_payment_order
 #: model:ir.model.fields,help:account_payment_order.field_account_payment_line_communication
 msgid "Label of the payment that will be seen by the destinee"
 msgstr "Etiqueta del pago que será vista por el beneficiario"
@@ -698,7 +704,7 @@ msgid "Missing Bank Journal on payment order %s."
 msgstr "No se ha establecido el diario de banco en la orden %s."
 
 #. module: account_payment_order
-#: code:addons/account_payment_order/models/account_payment_line.py:136
+#: code:addons/account_payment_order/models/account_payment_line.py:138
 #, python-format
 msgid "Missing Partner Bank Account on payment line %s"
 msgstr "No se ha establecido la cuenta bancaria en la línea de pago %s"
@@ -748,7 +754,7 @@ msgid "No Journal Entry on invoice %s"
 msgstr "No se ha encontrado asiento en la factura %s"
 
 #. module: account_payment_order
-#: code:addons/account_payment_order/models/account_invoice.py:78
+#: code:addons/account_payment_order/models/account_invoice.py:79
 #, python-format
 msgid ""
 "No Payment Line created for invoice %s because it already exists or because "
@@ -758,7 +764,7 @@ msgstr ""
 "la factura ya está pagada."
 
 #. module: account_payment_order
-#: code:addons/account_payment_order/models/account_invoice.py:84
+#: code:addons/account_payment_order/models/account_invoice.py:85
 #, python-format
 msgid "No Payment Mode on invoice %s"
 msgstr "No hay modo de pago en la factura %s"
@@ -873,6 +879,12 @@ msgid "Partner Bank Account"
 msgstr "Cuenta bancaria"
 
 #. module: account_payment_order
+#: model:ir.model.fields,field_description:account_payment_order.field_account_payment_line_create_partner_ids
+#, fuzzy
+msgid "Partners"
+msgstr "Empresa"
+
+#. module: account_payment_order
 #: model:ir.model.fields,help:account_payment_order.field_account_payment_mode_transfer_account_id
 msgid ""
 "Pay off lines in 'file uploaded' payment orders with a move on this account. "
@@ -977,7 +989,7 @@ msgid "Payment Type"
 msgstr "Tipo de pago"
 
 #. module: account_payment_order
-#: code:addons/account_payment_order/models/account_payment_order.py:440
+#: code:addons/account_payment_order/models/account_payment_order.py:442
 #, python-format
 msgid "Payment bank line %s"
 msgstr "Línea de pago bancario %s"
@@ -989,7 +1001,7 @@ msgstr "Líneas de pago"
 
 #. module: account_payment_order
 #: code:addons/account_payment_order/models/account_payment_order.py:369
-#: code:addons/account_payment_order/models/account_payment_order.py:390
+#: code:addons/account_payment_order/models/account_payment_order.py:392
 #, python-format
 msgid "Payment order %s"
 msgstr "Orden %s"
@@ -1034,12 +1046,6 @@ msgstr "Buscar líneas de pago bancario"
 #: model:ir.ui.view,arch_db:account_payment_order.account_payment_order_search
 msgid "Search Payment Orders"
 msgstr "Buscar órdees"
-
-#. module: account_payment_order
-#: code:addons/account_payment_order/wizard/account_payment_line_create.py:126
-#, python-format
-msgid "Select Move Lines to Create Transactions"
-msgstr "Seleccione apuntes para crear transacciones"
 
 #. module: account_payment_order
 #: model:ir.ui.view,arch_db:account_payment_order.account_payment_mode_form
@@ -1262,3 +1268,6 @@ msgstr ""
 #: model:ir.model,name:account_payment_order.model_report_account_payment_order_print_account_payment_order_main
 msgid "report.account_payment_order.print_account_payment_order_main"
 msgstr "report.account_payment_order.print_account_payment_order_main"
+
+#~ msgid "Select Move Lines to Create Transactions"
+#~ msgstr "Seleccione apuntes para crear transacciones"

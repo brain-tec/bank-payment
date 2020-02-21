@@ -50,7 +50,10 @@ class AccountBankingMandate(models.Model):
     )
     signature_date = fields.Date(string='Date of Signature of the Mandate',
                                  track_visibility='onchange')
-    scan = fields.Binary(string='Scan of the Mandate')
+    scan = fields.Binary(
+        string='Scan of the Mandate',
+        attachment=True,
+    )
     last_debit_date = fields.Date(string='Date of the Last Debit',
                                   readonly=True)
     state = fields.Selection([
@@ -100,7 +103,7 @@ class AccountBankingMandate(models.Model):
 
             if self.env['account.payment.line'].search(
                     [('mandate_id', '=', mandate.id),
-                     ('company_id', '=', mandate.company_id.id)], limit=1):
+                     ('company_id', '!=', mandate.company_id.id)], limit=1):
                 raise ValidationError(
                     _("You cannot change the company of mandate %s, "
                       "as there exists payment lines referencing it that "
@@ -109,7 +112,7 @@ class AccountBankingMandate(models.Model):
 
             if self.env['account.invoice'].search(
                     [('mandate_id', '=', mandate.id),
-                     ('company_id', '=', mandate.company_id.id)], limit=1):
+                     ('company_id', '!=', mandate.company_id.id)], limit=1):
                 raise ValidationError(
                     _("You cannot change the company of mandate %s, "
                       "as there exists invoices referencing it that belong to "
@@ -118,7 +121,7 @@ class AccountBankingMandate(models.Model):
 
             if self.env['account.move.line'].search(
                     [('mandate_id', '=', mandate.id),
-                     ('company_id', '=', mandate.company_id.id)], limit=1):
+                     ('company_id', '!=', mandate.company_id.id)], limit=1):
                 raise ValidationError(
                     _("You cannot change the company of mandate %s, "
                       "as there exists journal items referencing it that "
@@ -127,7 +130,7 @@ class AccountBankingMandate(models.Model):
 
             if self.env['bank.payment.line'].search(
                     [('mandate_id', '=', mandate.id),
-                     ('company_id', '=', mandate.company_id.id)], limit=1):
+                     ('company_id', '!=', mandate.company_id.id)], limit=1):
                 raise ValidationError(
                     _("You cannot change the company of mandate %s, "
                       "as there exists bank payment lines referencing it that "
@@ -157,11 +160,27 @@ class AccountBankingMandate(models.Model):
                     'account.banking.mandate') or 'New'
         return super(AccountBankingMandate, self).create(vals)
 
-    @api.multi
+    @api.onchange('company_id')
+    def _onchange_company_id(self):
+        res = {}
+        partner_domain = self._get_default_partner_bank_id_domain()
+        if self.company_id:
+            if self.partner_bank_id and \
+                    self.company_id and \
+                    self.partner_bank_id.company_id and \
+                    self.partner_bank_id.company_id != self.company_id:
+                self.partner_bank_id = False
+            partner_domain.append(('company_id', '=', self.company_id.id))
+            domain = {'partner_bank_id': partner_domain}
+        else:
+            domain = {
+                'partner_bank_id': partner_domain}
+        res['domain'] = domain
+        return res
+
     @api.onchange('partner_bank_id')
     def mandate_partner_bank_change(self):
-        for mandate in self:
-            mandate.partner_id = mandate.partner_bank_id.partner_id
+        self.partner_id = self.partner_bank_id.partner_id
 
     @api.multi
     def validate(self):
