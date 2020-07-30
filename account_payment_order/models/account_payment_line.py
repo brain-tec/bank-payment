@@ -54,7 +54,8 @@ class AccountPaymentLine(models.Model):
         help="Label of the payment that will be seen by the destinee")
     communication_type = fields.Selection([
         ('normal', 'Free'),
-        ], string='Communication Type', required=True, default='normal')
+        ('structured', 'Structured'),
+    ], string='Communication Type', required=True, default='normal')
     # v8 field : state
     bank_line_id = fields.Many2one(
         'bank.payment.line', string='Bank Payment Line', readonly=True)
