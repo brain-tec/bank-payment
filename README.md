@@ -33,7 +33,7 @@ Available addons
 ----------------
 addon | version | summary
 --- | --- | ---
-[account_banking_mandate](account_banking_mandate/) | 13.0.1.1.2 | Banking mandates
+[account_banking_mandate](account_banking_mandate/) | 13.0.1.1.3 | Banking mandates
 [account_banking_pain_base](account_banking_pain_base/) | 13.0.1.0.1 | Base module for PAIN file generation
 [account_banking_sepa_credit_transfer](account_banking_sepa_credit_transfer/) | 13.0.1.0.0 | Create SEPA XML files for Credit Transfers
 [account_banking_sepa_direct_debit](account_banking_sepa_direct_debit/) | 13.0.1.1.0 | Create SEPA files for Direct Debit
@@ -41,7 +41,7 @@ addon | version | summary
 [account_payment_mode](account_payment_mode/) | 13.0.1.2.0 | Account Payment Mode
 [account_payment_order](account_payment_order/) | 13.0.1.4.6 | Account Payment Order
 [account_payment_order_return](account_payment_order_return/) | 13.0.1.0.2 | Account Payment Order Return
-[account_payment_partner](account_payment_partner/) | 13.0.1.1.3 | Adds payment mode on partners and invoices
+[account_payment_partner](account_payment_partner/) | 13.0.1.1.4 | Adds payment mode on partners and invoices
 [account_payment_purchase](account_payment_purchase/) | 13.0.1.0.2 | Adds Bank Account and Payment Mode on Purchase Orders
 [account_payment_purchase_stock](account_payment_purchase_stock/) | 13.0.1.0.1 | Integrate Account Payment Purchase with Stock
 [account_payment_sale](account_payment_sale/) | 13.0.1.1.3 | Adds payment mode on sale orders
