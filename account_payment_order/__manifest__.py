@@ -8,7 +8,7 @@
 
 {
     "name": "Account Payment Order",
-    "version": "13.0.1.6.0",
+    "version": "13.0.1.6.1",
     "license": "AGPL-3",
     "author": "ACSONE SA/NV, "
     "Therp BV, "
@@ -35,6 +35,8 @@
         "data/payment_seq.xml",
         "report/print_account_payment_order.xml",
         "report/account_payment_order.xml",
+        "report/print_bank_payment_line.xml",
+        "report/bank_payment_line.xml",
     ],
     "demo": ["demo/payment_demo.xml"],
     "installable": True,
