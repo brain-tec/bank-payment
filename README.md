@@ -1,6 +1,7 @@
 
 [![Runboat](https://img.shields.io/badge/runboat-Try%20me-875A7B.png)](https://runboat.odoo-community.org/builds?repo=OCA/bank-payment&target_branch=13.0)
-[![Build Status](https://travis-ci.com/OCA/bank-payment.svg?branch=13.0)](https://travis-ci.com/OCA/bank-payment)
+[![Pre-commit Status](https://github.com/OCA/bank-payment/actions/workflows/pre-commit.yml/badge.svg?branch=13.0)](https://github.com/OCA/bank-payment/actions/workflows/pre-commit.yml?query=branch%3A13.0)
+[![Build Status](https://github.com/OCA/bank-payment/actions/workflows/test.yml/badge.svg?branch=13.0)](https://github.com/OCA/bank-payment/actions/workflows/test.yml?query=branch%3A13.0)
 [![codecov](https://codecov.io/gh/OCA/bank-payment/branch/13.0/graph/badge.svg)](https://codecov.io/gh/OCA/bank-payment)
 [![Translation Status](https://translation.odoo-community.org/widgets/bank-payment-13-0/-/svg-badge.svg)](https://translation.odoo-community.org/engage/bank-payment-13-0/?utm_source=widget)
 
@@ -39,10 +40,10 @@ addon | version | maintainers | summary
 [account_banking_sepa_credit_transfer](account_banking_sepa_credit_transfer/) | 13.0.1.1.0 |  | Create SEPA XML files for Credit Transfers
 [account_banking_sepa_direct_debit](account_banking_sepa_direct_debit/) | 13.0.1.2.0 |  | Create SEPA files for Direct Debit
 [account_invoice_select_for_payment](account_invoice_select_for_payment/) | 13.0.1.0.0 |  | Account Invoice Select for Payment
-[account_payment_mode](account_payment_mode/) | 13.0.1.2.0 |  | Account Payment Mode
-[account_payment_order](account_payment_order/) | 13.0.1.6.1 |  | Account Payment Order
+[account_payment_mode](account_payment_mode/) | 13.0.1.2.1 |  | Account Payment Mode
+[account_payment_order](account_payment_order/) | 13.0.1.6.2 |  | Account Payment Order
 [account_payment_order_return](account_payment_order_return/) | 13.0.1.0.2 |  | Account Payment Order Return
-[account_payment_partner](account_payment_partner/) | 13.0.1.4.0 |  | Adds payment mode on partners and invoices
+[account_payment_partner](account_payment_partner/) | 13.0.1.4.1 |  | Adds payment mode on partners and invoices
 [account_payment_purchase](account_payment_purchase/) | 13.0.1.0.2 |  | Adds Bank Account and Payment Mode on Purchase Orders
 [account_payment_purchase_stock](account_payment_purchase_stock/) | 13.0.1.0.1 |  | Integrate Account Payment Purchase with Stock
 [account_payment_sale](account_payment_sale/) | 13.0.1.1.3 |  | Adds payment mode on sale orders
