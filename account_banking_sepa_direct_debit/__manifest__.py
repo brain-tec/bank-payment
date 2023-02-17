@@ -5,7 +5,7 @@
 {
     "name": "Account Banking SEPA Direct Debit",
     "summary": "Create SEPA files for Direct Debit",
-    "version": "15.0.1.0.1",
+    "version": "15.0.1.0.2",
     "license": "AGPL-3",
     "author": "Akretion, " "Tecnativa, " "Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/bank-payment",
@@ -32,6 +32,5 @@
         "views/report_sepa_direct_debit_mandate.xml",
     ],
     "demo": ["demo/sepa_direct_debit_demo.xml"],
-    "post_init_hook": "update_bank_journals",
     "installable": True,
 }
