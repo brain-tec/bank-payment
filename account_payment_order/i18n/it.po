@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: Odoo Server 11.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-11-23 03:38+0000\n"
-"PO-Revision-Date: 2024-02-23 14:40+0000\n"
+"PO-Revision-Date: 2024-02-27 14:38+0000\n"
 "Last-Translator: mymage <stefano.consolaro@mymage.it>\n"
 "Language-Team: Italian (https://www.transifex.com/oca/teams/23907/it/)\n"
 "Language: it\n"
@@ -40,6 +40,12 @@ msgstr ""
 "%d righe di pagamento aggiunte al nuovo ordine di pagamento in bozza <a "
 "href=# data-oe-model=account.payment.order data-oe-id=%d>%s</a> che è stato "
 "creato automaticamente."
+
+#. module: account_payment_order
+#: code:addons/account_payment_order/models/account_payment_order.py:0
+#, python-format
+msgid "<b>Account Number</b>: %s - <b>Partner</b>: %s"
+msgstr ""
 
 #. module: account_payment_order
 #: model_terms:ir.ui.view,arch_db:account_payment_order.print_account_payment_order_document
@@ -903,6 +909,11 @@ msgid "Partner Bank Account"
 msgstr "Conta Bancario Partner"
 
 #. module: account_payment_order
+#: model:ir.model.fields,field_description:account_payment_order.field_account_payment_order__partner_banks_archive_msg
+msgid "Partner Banks Archive Msg"
+msgstr ""
+
+#. module: account_payment_order
 #: model:ir.model.fields,field_description:account_payment_order.field_account_payment_line_create__partner_ids
 msgid "Partners"
 msgstr "Partner"
@@ -1139,6 +1150,11 @@ msgid "The amount for Partner '%s' is negative or null (%.2f) !"
 msgstr "L'importo per il Partner '%s' è negativo o nullo (%.2f) !"
 
 #. module: account_payment_order
+#: model_terms:ir.ui.view,arch_db:account_payment_order.account_payment_order_form
+msgid "The following bank accounts are archived:"
+msgstr ""
+
+#. module: account_payment_order
 #: code:addons/account_payment_order/models/account_move.py:0
 #, python-format
 msgid "The invoice %s is not in Posted state"
@@ -1206,7 +1222,7 @@ msgstr ""
 #. module: account_payment_order
 #: model_terms:ir.ui.view,arch_db:account_payment_order.print_account_payment_order_document
 msgid "Total (Currency)"
-msgstr "Totale (Valuta)"
+msgstr "Totale (valuta)"
 
 #. module: account_payment_order
 #: model:ir.model.fields,field_description:account_payment_order.field_account_payment_order__total_company_currency
