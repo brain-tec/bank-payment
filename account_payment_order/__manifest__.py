@@ -9,7 +9,7 @@
 
 {
     "name": "Account Payment Order",
-    "version": "16.0.1.7.0",
+    "version": "16.0.1.8.0",
     "license": "AGPL-3",
     "author": "ACSONE SA/NV, "
     "Therp BV, "
@@ -36,6 +36,7 @@
         "data/payment_seq.xml",
         "report/print_account_payment_order.xml",
         "report/account_payment_order.xml",
+        "wizard/res_config_settings.xml",
     ],
     "demo": ["demo/payment_demo.xml"],
     "installable": True,
