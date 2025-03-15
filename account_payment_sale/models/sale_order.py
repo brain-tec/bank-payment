@@ -16,7 +16,9 @@ class SaleOrder(models.Model):
         readonly=False,
         precompute=True,
         check_company=True,
-        domain="[('payment_type', '=', 'inbound'), ('company_id', '=', company_id)]",
+        tracking=2,
+        domain="[('payment_type', '=', 'inbound'), ('company_id', '=', company_id), "
+        "('selectable', '=', True)]",
     )
 
     @api.depends("partner_id")
