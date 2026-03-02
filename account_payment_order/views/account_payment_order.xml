@@ -58,6 +58,16 @@
                         statusbar_visible="draft,open,generated,uploaded"
                     />
                 </header>
+                <div
+                    class="alert alert-warning"
+                    role="alert"
+                    attrs="{'invisible': [('partner_banks_archive_msg', '=', False)]}"
+                >
+                    The following bank accounts are archived: <field
+                        name="partner_banks_archive_msg"
+                        readonly="1"
+                    />
+                </div>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
                         <button
@@ -126,7 +136,12 @@
                             string="Payment Transactions"
                             attrs="{'invisible': [('state', 'in', ('draft', 'cancel'))]}"
                         >
-                            <field name="payment_ids" edit="0" create="0" />
+                            <field
+                                name="payment_ids"
+                                edit="0"
+                                create="0"
+                                context="{'tree_view_ref': 'account_payment_order.view_account_payment_tree_payment_order'}"
+                            />
                         </page>
                     </notebook>
                 </sheet>
