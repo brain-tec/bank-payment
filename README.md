@@ -1,4 +1,7 @@
 
+[![Support the OCA](https://odoo-community.org/readme-banner-image)](https://odoo-community.org/get-involved?utm_source=repo-readme)
+
+# OCA banking payment addons for Odoo
 [![Runboat](https://img.shields.io/badge/runboat-Try%20me-875A7B.png)](https://runboat.odoo-community.org/builds?repo=OCA/bank-payment&target_branch=14.0)
 [![Pre-commit Status](https://github.com/OCA/bank-payment/actions/workflows/pre-commit.yml/badge.svg?branch=14.0)](https://github.com/OCA/bank-payment/actions/workflows/pre-commit.yml?query=branch%3A14.0)
 [![Build Status](https://github.com/OCA/bank-payment/actions/workflows/test.yml/badge.svg?branch=14.0)](https://github.com/OCA/bank-payment/actions/workflows/test.yml?query=branch%3A14.0)
@@ -6,8 +9,6 @@
 [![Translation Status](https://translation.odoo-community.org/widgets/bank-payment-14-0/-/svg-badge.svg)](https://translation.odoo-community.org/engage/bank-payment-14-0/?utm_source=widget)
 
 <!-- /!\ do not modify above this line -->
-
-# OCA banking payment addons for Odoo
 
 This project focus on payment interface
 
@@ -25,7 +26,7 @@ addon | version | maintainers | summary
 [account_banking_mandate_contact](account_banking_mandate_contact/) | 14.0.1.0.0 |  | Assign specific banking mandates in contact level
 [account_banking_mandate_sale](account_banking_mandate_sale/) | 14.0.1.0.0 |  | Adds mandates on sale orders
 [account_banking_pain_base](account_banking_pain_base/) | 14.0.2.1.3 |  | Base module for PAIN file generation
-[account_banking_sepa_credit_transfer](account_banking_sepa_credit_transfer/) | 14.0.2.0.5 |  | Create SEPA XML files for Credit Transfers
+[account_banking_sepa_credit_transfer](account_banking_sepa_credit_transfer/) | 14.0.2.0.6 |  | Create SEPA XML files for Credit Transfers
 [account_banking_sepa_direct_debit](account_banking_sepa_direct_debit/) | 14.0.2.1.3 |  | Create SEPA files for Direct Debit
 [account_invoice_select_for_payment](account_invoice_select_for_payment/) | 14.0.1.1.0 |  | Account Invoice Select for Payment
 [account_payment_mode](account_payment_mode/) | 14.0.1.1.0 |  | Account Payment Mode
